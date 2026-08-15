@@ -42,14 +42,14 @@ ALERT_COOLDOWN_HOURS = 24
 # Leave EMAIL_ENABLED as False until you've set up an app password — the
 # script runs fine without it, it just won't send anything.
 EMAIL_ENABLED = True
-EMAIL_FROM = "youraddress@gmail.com"
-EMAIL_APP_PASSWORD = "PASTE_GMAIL_APP_PASSWORD_HERE"   # not your normal password — see note below
-EMAIL_TO = "storekeeper@example.com"
+EMAIL_FROM = "aXXXXXXXXX@gmail.com"
+EMAIL_APP_PASSWORD = "xxxx xxxx xxxx xxxx"   # not your normal password — see note below
+EMAIL_TO = "1XXXXXXX@gmail.com"
 
 # WhatsApp via CallMeBot (free, personal-use). Get your API key by messaging
 # the bot first — see the setup steps in the project README.
 WHATSAPP_ENABLED = True
-WHATSAPP_PHONE = "91XXXXXXXXXX"       # your number, country code, no + or spaces
+WHATSAPP_PHONE = "916XXXXXXXXXX"       # your number, country code, no + or spaces
 WHATSAPP_APIKEY = "PASTE_CALLMEBOT_APIKEY_HERE"
 # ============================================
 
