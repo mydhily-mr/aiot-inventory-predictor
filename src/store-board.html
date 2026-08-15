@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Store Board — SMD Component Inventory</title>
+<script>
+// Set theme before first paint to avoid a flash of the wrong mode.
+(function(){
+  try{
+    var t = localStorage.getItem('store-board-theme');
+    if(t === 'light' || t === 'dark'){ document.documentElement.setAttribute('data-theme', t); }
+  }catch(e){}
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<!-- Firebase (optional — only used once CONFIG.useFirebase is set to true below) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js" onerror="console.warn('Firebase SDK failed to load — falling back to demo data')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-database-compat.min.js" onerror="console.warn('Firebase SDK failed to load — falling back to demo data')"></script>
+<style>
+  /* ================= THEME TOKENS ================= */
+  :root,
+  [data-theme="dark"]{
+    --bg: #050b12;
+    --surface: #0c1922;
+    --surface-2: #0a141c;
+    --ink: #e7f6fb;
+    --ink-soft: #6c8fa3;
+    --line: #17313f;
+    --line-bright: #21506a;
+
+    --amber: #ff9d3d;
+    --cyan: #3fe6f5;
+    --cyan-dim: rgba(63,230,245,0.16);
+    --ok: #35e0a0;
+    --ok-bg: rgba(53,224,160,0.12);
+    --warn: #ffbb47;
+    --warn-bg: rgba(255,187,71,0.12);
+    --crit: #ff5470;
+    --crit-bg: rgba(255,84,112,0.12);
+
+    --chart-fill: rgba(63,230,245,0.08);
+    --tooltip-bg: #0c1922;
+    --tooltip-border: #21506a;
+
+    --dot-grid: rgba(63,230,245,0.05);
+    --frame-border: rgba(255,157,61,0.55);
+    --frame-tint: rgba(255,157,61,0.10);
+    --frame-bg: #08121a;
+    --frame-shadow: 0 0 0 1px rgba(255,157,61,0.08), 0 30px 60px rgba(0,0,0,0.45);
+    --bolt-grad: radial-gradient(circle at 35% 32%, #6b4a26, #16100a 72%);
+    --bolt-ring: rgba(255,157,61,0.3);
+
+    --glow-cyan: 0 0 10px rgba(63,230,245,.5), 0 0 24px rgba(63,230,245,.2);
+    --glow-amber: 0 0 10px rgba(255,157,61,.5);
+    --glow-ok: 0 0 10px rgba(53,224,160,.55), 0 0 24px rgba(53,224,160,.22);
+    --glow-warn: 0 0 10px rgba(255,187,71,.55), 0 0 24px rgba(255,187,71,.22);
+    --glow-crit: 0 0 10px rgba(255,84,112,.55), 0 0 24px rgba(255,84,112,.22);
+    --card-edge-glow: 0 0 10px var(--status-color, transparent);
+    --card-active-ring: 0 0 0 1px var(--status-color, var(--cyan)), 0 4px 20px rgba(0,0,0,0.4);
+  }
+  [data-theme="light"]{
+    --bg: #EEF1EC;
+    --surface: #FFFFFF;
+    --surface-2: #F4F6F1;
+    --ink: #142129;
+    --ink-soft: #5c6f76;
+    --line: #DBE1D9;
+    --line-bright: #B9CBCE;
+
+    --amber: #B5590E;
+    --cyan: #0E7C86;
+    --cyan-dim: rgba(14,124,134,0.14);
+    --ok: #1F8A55;
+    --ok-bg: rgba(31,138,85,0.10);
+    --warn: #A5700D;
+    --warn-bg: rgba(165,112,13,0.10);
+    --crit: #C23B3B;
+    --crit-bg: rgba(194,59,59,0.10);
+
+    --chart-fill: rgba(14,124,134,0.08);
+    --tooltip-bg: #FFFFFF;
+    --tooltip-border: #DBE1D9;
+
+    --dot-grid: rgba(14,124,134,0.06);
+    --frame-border: rgba(181,89,14,0.35);
+    --frame-tint: rgba(181,89,14,0.05);
+    --frame-bg: #F6F4EF;
+    --frame-shadow: 0 0 0 1px rgba(181,89,14,0.08), 0 20px 44px rgba(20,30,25,0.10);
+    --bolt-grad: radial-gradient(circle at 35% 32%, #d8d3c8, #9a9488 72%);
+    --bolt-ring: rgba(181,89,14,0.25);
+
+    --glow-cyan: none;
+    --glow-amber: none;
+    --glow-ok: none;
+    --glow-warn: none;
+    --glow-crit: none;
+    --card-edge-glow: none;
+    --card-active-ring: 0 4px 14px rgba(20,30,25,0.10);
+  }
+
+  *{box-sizing:border-box;}
+  html{ color-scheme: dark; }
+  html[data-theme="light"]{ color-scheme: light; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 1px 1px, var(--dot-grid) 1px, transparent 0) 0 0/24px 24px,
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    transition:background-color .25s ease, color .25s ease;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  /* ---- device frame (the HMI enclosure) ---- */
+  .device-frame{
+    position:relative;
+    max-width:1244px;
+    margin:22px auto;
+    border:1px solid var(--frame-border);
+    border-radius:16px;
+    padding:3px;
+    background:
+      linear-gradient(180deg, var(--frame-tint), rgba(0,0,0,0) 45%),
+      var(--frame-bg);
+    box-shadow:var(--frame-shadow);
+    transition:border-color .25s ease, background-color .25s ease, box-shadow .25s ease;
+  }
+  .device-inner{
+    background:var(--bg);
+    border-radius:13px;
+    overflow:hidden;
+  }
+  .bolt{
+    position:absolute; width:11px; height:11px; border-radius:50%;
+    background:var(--bolt-grad);
+    box-shadow:0 0 0 2px var(--bolt-ring), inset 0 0 3px rgba(0,0,0,0.9);
+    z-index:2;
+  }
+  .bolt.tl{top:11px; left:11px;}
+  .bolt.tr{top:11px; right:11px;}
+  .bolt.bl{bottom:11px; left:11px;}
+  .bolt.br{bottom:11px; right:11px;}
+
+  /* ---- topbar ---- */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 32px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface-2);
+  }
+  .brand-block{display:flex; align-items:center; gap:14px;}
+  .brand-mark{
+    width:38px; height:38px;
+    border-radius:8px;
+    background:linear-gradient(160deg, var(--surface), var(--surface-2));
+    border:1px solid var(--cyan);
+    box-shadow:0 0 12px var(--cyan-dim), inset 0 0 8px var(--cyan-dim);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark span{
+    color:var(--cyan); font-family:'JetBrains Mono',monospace;
+    font-size:11px; font-weight:700; letter-spacing:0.02em;
+    text-shadow:var(--glow-cyan);
+  }
+  .brand-text h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600; margin:0; letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  .brand-text p{
+    margin:2px 0 0; font-size:12.5px; color:var(--ink-soft);
+  }
+
+  .header-right{ display:flex; align-items:center; gap:18px; }
+
+  /* ---- theme toggle ---- */
+  .theme-toggle{ background:none; border:none; padding:0; cursor:pointer; }
+  .ttrack{
+    position:relative; width:50px; height:27px; border-radius:999px;
+    background:var(--surface); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 6px;
+    transition:background-color .2s ease, border-color .2s ease;
+  }
+  .ticon{ width:13px; height:13px; color:var(--ink-soft); position:relative; z-index:1; transition:color .2s ease; }
+  [data-theme="light"] .ticon.sun{ color:var(--amber); }
+  [data-theme="dark"] .ticon.moon{ color:var(--cyan); }
+  .tknob{
+    position:absolute; top:2.5px; left:2.5px; width:20px; height:20px; border-radius:50%;
+    background:var(--cyan); box-shadow:var(--glow-cyan);
+    transform:translateX(23px);
+    transition:transform .25s cubic-bezier(.4,0,.2,1), background-color .2s ease;
+  }
+  [data-theme="light"] .tknob{ transform:translateX(0); background:var(--amber); box-shadow:none; }
+
+  .sync-block{text-align:right; font-size:12px; color:var(--ink-soft);}
+  .sync-dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    background:var(--ink-soft); margin-right:6px;
+    box-shadow:0 0 0 3px rgba(108,143,163,0.15);
+    transition:background-color .2s ease, box-shadow .2s ease;
+  }
+  .sync-dot.live{ background:var(--cyan); box-shadow:0 0 0 3px var(--cyan-dim), 0 0 8px var(--cyan); }
+  .sync-block .mono{color:var(--cyan); font-size:12.5px; text-shadow:var(--glow-cyan);}
+
+  main{max-width:1180px; margin:0 auto; padding:28px 32px 60px;}
+
+  /* ---- stat strip ---- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:32px;
+  }
+  .stat{
+    background:var(--surface);
+    padding:16px 20px;
+  }
+  .stat .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:28px; font-weight:700; letter-spacing:-0.01em;
+    color:var(--cyan);
+    text-shadow:var(--glow-cyan);
+  }
+  .stat .label{
+    font-size:11px; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.08em;
+    margin-top:5px;
+  }
+  .stat.crit .num{color:var(--crit); text-shadow:var(--glow-crit);}
+  .stat.warn .num{color:var(--warn); text-shadow:var(--glow-warn);}
+  .stat.ok .num{color:var(--ok); text-shadow:var(--glow-ok);}
+
+  /* ---- section label ---- */
+  .section-label{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .section-label h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.1em;
+    margin:0; color:var(--amber);
+  }
+  .section-label .hint{font-size:12px; color:var(--ink-soft);}
+
+  /* ---- bin grid ---- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:14px;
+    margin-bottom:36px;
+  }
+  .card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 16px 14px 18px;
+    cursor:pointer;
+    transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease, background-color .25s ease;
+  }
+  .card[data-status="ok"]{ --status-color:var(--ok); }
+  .card[data-status="warn"]{ --status-color:var(--warn); }
+  .card[data-status="crit"]{ --status-color:var(--crit); }
+  .card::before{
+    content:'';
+    position:absolute; left:0; top:0; bottom:0;
+    width:4px;
+    border-radius:10px 0 0 10px;
+    background:var(--status-color, var(--ok));
+    box-shadow:var(--card-edge-glow);
+  }
+  .card:hover{ box-shadow:0 4px 20px rgba(0,0,0,0.16); transform:translateY(-1px); border-color:var(--line-bright); }
+  [data-theme="dark"] .card:hover{ box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+  .card.active{ border-color:var(--status-color, var(--cyan)); box-shadow:var(--card-active-ring); }
+
+  .card .bin-id{
+    font-size:11px; color:var(--ink-soft);
+    letter-spacing:0.03em;
+  }
+  .card .name{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15.5px; font-weight:600;
+    margin:3px 0 12px;
+    color:var(--ink);
+  }
+  .card .qty-row{
+    display:flex; align-items:baseline; gap:6px;
+    margin-bottom:2px;
+  }
+  .card .qty{
+    font-family:'JetBrains Mono',monospace;
+    font-size:25px; font-weight:700;
+    color:var(--cyan);
+    text-shadow:var(--glow-cyan);
+  }
+  .card .qty-unit{font-size:11.5px; color:var(--ink-soft);}
+  .card .weight{font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;}
+
+  .card .eta-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:11px; border-top:1px solid var(--line);
+  }
+  .card .eta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px; font-weight:500;
+    color:var(--ink);
+  }
+  .badge{
+    font-size:10.5px; font-weight:600;
+    padding:3px 9px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:0.03em;
+    border:1px solid currentColor;
+  }
+  .badge.ok{ color:var(--ok); background:var(--ok-bg); }
+  .badge.warn{ color:var(--warn); background:var(--warn-bg); }
+  .badge.crit{ color:var(--crit); background:var(--crit-bg); }
+
+  /* ---- detail panel ---- */
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 24px 12px;
+    transition:background-color .25s ease, border-color .25s ease;
+  }
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:6px;
+  }
+  .panel-head h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px; margin:0;
+    color:var(--ink);
+  }
+  .panel-head .sub{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .panel-head .eta-big{
+    text-align:right;
+  }
+  .panel-head .eta-big .n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:24px; font-weight:700;
+    color:var(--amber);
+    text-shadow:var(--glow-amber);
+  }
+  .panel-head .eta-big .n.ok{ color:var(--ok); text-shadow:var(--glow-ok); }
+  .panel-head .eta-big .n.warn{ color:var(--warn); text-shadow:var(--glow-warn); }
+  .panel-head .eta-big .n.crit{ color:var(--crit); text-shadow:var(--glow-crit); }
+  .panel-head .eta-big .l{ font-size:11px; color:var(--ink-soft); }
+  .chart-wrap{ height:220px; margin-top:14px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:10px 6px 4px; }
+  .legend-row{
+    display:flex; gap:18px; margin-top:8px; padding-top:10px;
+    border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft);
+  }
+  .legend-row span{display:flex; align-items:center; gap:6px;}
+  .legend-swatch{width:14px; height:2px; display:inline-block;}
+  .swatch-cyan{ background:var(--cyan); }
+  .swatch-amber{ background:var(--amber); opacity:.75; border-top:2px dashed var(--amber); }
+
+  footer{
+    max-width:1180px; margin:0 auto; padding:0 32px 40px;
+    font-size:12px; color:var(--ink-soft); line-height:1.6;
+  }
+  footer strong{color:var(--ink);}
+
+  @media (max-width:640px){
+    header{padding:16px 18px;}
+    main{padding:20px 18px 40px;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .device-frame{ margin:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="device-frame">
+  <div class="bolt tl"></div>
+  <div class="bolt tr"></div>
+  <div class="bolt bl"></div>
+  <div class="bolt br"></div>
+  <div class="device-inner">
+
+<header>
+  <div class="brand-block">
+    <div class="brand-mark"><span>SB</span></div>
+    <div class="brand-text">
+      <h1>Store Board</h1>
+      <p>Predictive Component Inventory — SMD Line 3</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode" aria-pressed="false">
+      <span class="ttrack">
+        <svg class="ticon sun" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8" cy="8" r="3.2" fill="currentColor"/>
+          <g stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+            <line x1="8" y1="0.6" x2="8" y2="2.3"/><line x1="8" y1="13.7" x2="8" y2="15.4"/>
+            <line x1="0.6" y1="8" x2="2.3" y2="8"/><line x1="13.7" y1="8" x2="15.4" y2="8"/>
+            <line x1="2.6" y1="2.6" x2="3.8" y2="3.8"/><line x1="12.2" y1="12.2" x2="13.4" y2="13.4"/>
+            <line x1="2.6" y1="13.4" x2="3.8" y2="12.2"/><line x1="12.2" y1="3.8" x2="13.4" y2="2.6"/>
+          </g>
+        </svg>
+        <svg class="ticon moon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M13.5 9.6A6 6 0 1 1 6.4 2.5a5 5 0 0 0 7.1 7.1z" fill="currentColor"/>
+        </svg>
+        <span class="tknob"></span>
+      </span>
+    </button>
+    <div class="sync-block">
+      <div><span class="sync-dot" id="sync-dot"></span><span id="source-label">Demo data</span></div>
+      <div class="mono" id="clock">—</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+
+  <div class="section-label">
+    <h2>Bins</h2>
+    <span class="hint">Tap a bin to see its consumption forecast</span>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="section-label">
+    <h2>Consumption Forecast</h2>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <div>
+        <h3 id="panel-name">—</h3>
+        <div class="sub" id="panel-sub">—</div>
+      </div>
+      <div class="eta-big">
+        <div class="n" id="panel-eta">—</div>
+        <div class="l">days to empty</div>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    <div class="legend-row">
+      <span><span class="legend-swatch swatch-cyan"></span>Observed weight</span>
+      <span><span class="legend-swatch swatch-amber"></span>Forecast to empty</span>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <strong>Note:</strong> figures shown are simulated for demo purposes. Once the gateway (ESP-01 → cloud) is wired to the live sensors, this board reads directly from the same feed — no layout changes needed. Built for SMD reel bins first; the same bin-card model extends to fastener bins, raw-material stock, or tool-crib checkout as the system rolls out to other lines.
+</footer>
+
+  </div>
+</div>
+
+<script>
+// ================= CONFIG =================
+// Flip this to true once you've created your Firebase project and pasted
+// your config below. Until then, the board runs on the demo data untouched.
+const CONFIG = {
+  useFirebase: false,
+  firebaseConfig: {
+    apiKey: "PASTE_YOUR_API_KEY",
+    databaseURL: "https://YOUR-PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR-PROJECT-ID",
+  }
+};
+// ============================================
+
+const demoBins = [
+  { id:'BIN-R10K-08', name:'10kΩ Resistor · 0805', qty:8400, unit:'pcs', weight:340, rate:300 },
+  { id:'BIN-C100N-06', name:'100nF Ceramic Cap · 0603', qty:1200, unit:'pcs', weight:28, rate:260 },
+  { id:'BIN-CONUSBC16', name:'USB-C Connector · 16-pin', qty:340, unit:'pcs', weight:612, rate:40 },
+  { id:'BIN-IC-M328P', name:'ATmega328P · TQFP', qty:900, unit:'pcs', weight:810, rate:15 },
+  { id:'BIN-LED-R06', name:'Red LED · 0603', qty:5200, unit:'pcs', weight:31, rate:500 },
+];
+
+let bins = demoBins;
+let dataSourceLabel = 'Demo data (Firebase not connected)';
+
+function computeStatus(days){
+  if(days < 5) return 'crit';
+  if(days < 14) return 'warn';
+  return 'ok';
+}
+const statusLabel = { ok:'Healthy', warn:'Reorder soon', crit:'Critical' };
+
+function annotate(list){
+  list.forEach(b=>{
+    b.days = +(b.qty / b.rate).toFixed(1);
+    b.status = computeStatus(b.days);
+  });
+  return list;
+}
+annotate(bins);
+
+// ---- theme (reads live CSS variables so chart/canvas colors always match) ----
+function cssVar(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+function currentTheme(){
+  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-toggle');
+  if(btn) btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+  try{ localStorage.setItem('store-board-theme', theme); }catch(e){}
+  // redraw the chart so its canvas colors pick up the new theme
+  const active = document.querySelector('.card.active');
+  if(active) selectBin(active.dataset.id);
+}
+function initTheme(){
+  const btn = document.getElementById('theme-toggle');
+  btn.addEventListener('click', ()=>{
+    applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+  });
+  btn.setAttribute('aria-pressed', currentTheme() === 'light' ? 'true' : 'false');
+}
+
+// ---- grid ----
+const grid = document.getElementById('grid');
+function render(){
+  grid.innerHTML = bins.map(b => `
+    <div class="card" data-status="${b.status}" data-id="${b.id}">
+      <div class="bin-id mono">${b.id}</div>
+      <div class="name">${b.name}</div>
+      <div class="qty-row">
+        <span class="qty">${b.qty.toLocaleString()}</span>
+        <span class="qty-unit">${b.unit}</span>
+      </div>
+      <div class="weight">${b.weight} g on load cell</div>
+      <div class="eta-row">
+        <span class="eta">${b.days}d left</span>
+        <span class="badge ${b.status}">${statusLabel[b.status]}</span>
+      </div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.card').forEach(el=>{
+    el.addEventListener('click', ()=> selectBin(el.dataset.id));
+  });
+}
+
+// ---- chart ----
+let chart;
+function buildSeries(b){
+  const days=14, labels=[], observed=[], forecast=[];
+  const dailyLoss = b.weight * (b.rate / b.qty);
+  let w = b.weight + dailyLoss*days;
+  for(let i=-days;i<=0;i++){
+    labels.push(i===0?'Today':i+'d');
+    w -= dailyLoss * (1 + (Math.random()-0.5)*0.15);
+    observed.push(Math.max(w,0).toFixed(1));
+    forecast.push(null);
+  }
+  let fw = parseFloat(observed[observed.length-1]);
+  forecast[forecast.length-1] = fw;
+  const daysToZero = Math.ceil(fw/dailyLoss);
+  for(let i=1;i<=Math.min(daysToZero, 14);i++){
+    labels.push('+'+i+'d');
+    fw = Math.max(fw-dailyLoss,0);
+    forecast.push(fw.toFixed(1));
+    observed.push(null);
+  }
+  return {labels, observed, forecast};
+}
+
+function selectBin(id){
+  const b = bins.find(x=>x.id===id);
+  document.querySelectorAll('.card').forEach(c=> c.classList.toggle('active', c.dataset.id===id));
+  document.getElementById('panel-name').textContent = b.name;
+  document.getElementById('panel-sub').textContent = `${b.id} · burn rate ≈ ${b.rate} ${b.unit}/day`;
+  const etaEl = document.getElementById('panel-eta');
+  etaEl.textContent = b.days;
+  etaEl.className = 'n ' + b.status;
+
+  const {labels, observed, forecast} = buildSeries(b);
+  const ctx = document.getElementById('chart').getContext('2d');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'Observed', data:observed, borderColor:cssVar('--cyan'), backgroundColor:cssVar('--chart-fill'), fill:true, tension:0.3, pointRadius:0, borderWidth:2.5, spanGaps:false },
+        { label:'Forecast', data:forecast, borderColor:cssVar('--amber'), borderDash:[5,4], fill:false, tension:0.3, pointRadius:0, borderWidth:2, spanGaps:false },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ mode:'index', intersect:false, backgroundColor:cssVar('--tooltip-bg'), borderColor:cssVar('--tooltip-border'), borderWidth:1, titleColor:cssVar('--ink'), bodyColor:cssVar('--ink') } },
+      scales:{
+        y:{ title:{display:true, text:'grams on load cell', font:{size:11}, color:cssVar('--ink-soft')}, grid:{color:cssVar('--line')}, ticks:{color:cssVar('--ink-soft')} },
+        x:{ grid:{display:false}, ticks:{color:cssVar('--ink-soft')} }
+      }
+    }
+  });
+}
+function renderAll(){
+  const critCount = bins.filter(b=>b.status==='crit').length;
+  const warnCount = bins.filter(b=>b.status==='warn').length;
+  const okCount = bins.filter(b=>b.status==='ok').length;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${bins.length}</div><div class="label">Bins tracked</div></div>
+    <div class="stat crit"><div class="num">${critCount}</div><div class="label">Critical</div></div>
+    <div class="stat warn"><div class="num">${warnCount}</div><div class="label">Reorder soon</div></div>
+    <div class="stat ok"><div class="num">${okCount}</div><div class="label">Healthy</div></div>
+  `;
+  render();
+  const fallback = bins.find(b=>b.status==='crit') || bins[0];
+  if(fallback) selectBin(fallback.id);
+  document.getElementById('source-label').textContent = dataSourceLabel;
+}
+
+// ---- Firebase live wiring (only runs if CONFIG.useFirebase is true) ----
+function initFirebase(){
+  try{
+    if(!CONFIG.useFirebase){ return; }
+    if(typeof firebase === 'undefined'){
+      console.warn('Firebase SDK not available — staying on demo data');
+      return;
+    }
+    firebase.initializeApp(CONFIG.firebaseConfig);
+    const db = firebase.database();
+    dataSourceLabel = 'Connecting to live gateway…';
+    document.getElementById('source-label').textContent = dataSourceLabel;
+
+    db.ref('bins').on('value', snapshot => {
+      const val = snapshot.val();
+      if(!val){ return; } // no data yet — keep showing demo bins
+      const liveBins = Object.entries(val).map(([id, b]) => ({
+        id,
+        name: b.name,
+        qty: b.qty,
+        unit: b.unit || 'pcs',
+        weight: b.weight_g,
+        rate: b.rate_per_day,
+      }));
+      bins = annotate(liveBins);
+      dataSourceLabel = 'Live — gateway connected';
+      document.getElementById('sync-dot').classList.add('live');
+      renderAll();
+    }, err => {
+      console.error('Firebase read failed:', err);
+      dataSourceLabel = 'Live sync failed — showing demo data';
+      renderAll();
+    });
+  }catch(e){
+    console.error('Firebase init error:', e);
+    dataSourceLabel = 'Live sync failed — showing demo data';
+    renderAll();
+  }
+}
+
+renderAll();
+initFirebase();
+initTheme();
+
+// ---- clock ----
+function tick(){
+  document.getElementById('clock').textContent = new Date().toLocaleString('en-IN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
+}
+tick(); setInterval(tick, 30000);
+</script>
+</body>
+</html>
