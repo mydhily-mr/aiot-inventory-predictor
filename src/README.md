@@ -1,5 +1,5 @@
 # aiot-inventory-predictor
-##AI-Based Predictive Inventory Management System
+#AI-Based Predictive Inventory Management System (PIMS)
 
 **AIoT Inventory Predictor** is an edge-based IoT system using the **Analog Devices MAX32630FTHR** to monitor material consumption and predict potential stockouts before they disrupt manufacturing.
 
