@@ -1,7 +1,7 @@
 [← Back to README](../README.md)
 
 ## Day -1: Planning
-**14 Aug 2026**
+<!-- **14 Aug 2026** -->
 
 ### Data Collection
 
@@ -25,10 +25,11 @@ Our system asks four questions instead:
 
 ### Implementation Model
 
-![Estimated Flow chart](images/flow_chart.png)
+![Estimated Flow chart](../images/flow_chart.png)
+
    *Fig 1.1: Estimated Flow chart*
 
-> 📷 **`Fig 1.1`** — System architecture flowchart (Smart Inventory Bin → Camera / Load Cell / RFID → MAX32630FTHR → IoT Link → AI Backend → Image Analysis / Quantity Analysis / Inventory DB → Inventory Verification → Match/Mismatch → Alert & Update)
+> **`Fig 1.1`** — System architecture flowchart (Smart Inventory Bin → Camera / Load Cell / RFID → MAX32630FTHR → IoT Link → AI Backend → Image Analysis / Quantity Analysis / Inventory DB → Inventory Verification → Match/Mismatch → Alert & Update)
 
 The flow works like this:
 
@@ -77,7 +78,7 @@ The flow works like this:
 
 **Pipeline:** `Identify → Count → Verify → Predict`
   
-> 📷 **`(images/flow_chart.png)`** — Expected Photo of the finished smart storage bin prototype: mini display screens mounted on blue storage bins on a shelf, plus a close-up of the bin housing the electronics (RFID reader, load cell wiring, MAX32630FTHR).
+> 📷 **`(image25.png)`** — Expected Photo of the finished smart storage bin prototype: mini display screens mounted on blue storage bins on a shelf, plus a close-up of the bin housing the electronics (RFID reader, load cell wiring, MAX32630FTHR).
 
 ### Components Required
 
@@ -107,17 +108,17 @@ The flow works like this:
 
 **Reference builds / inspiration:**
 
-> 📷 **`(images/image3.jpg)`** — "IoT-Based Smart Retail Shelf Monitoring System" demo: bottles on a shelf next to an RFID reader module and an OLED showing item count.
+> 
+![Estimated Flow chart](../images/image3.png)— "IoT-Based Smart Retail Shelf Monitoring System" demo: bottles on a shelf next to an RFID reader module and an OLED showing item count.
 
-> 📷 **`(images/image4.jpg)`** — Load cell mounted under a shelf bracket (close-up of the sensor and mounting hardware).
+![Estimated Flow chart](../images/image4.jpg) — 
+Load cell mounted under a shelf bracket (close-up of the sensor and mounting hardware).
 
-> 📷 **`(images/image5.jpg)`** — Tablet dashboard mockup showing inventory info (product, pallets, boxes, occupied range), live temperature/humidity graph, and a weekly inventory bar chart.
+![Estimated Flow chart](../images/image5.jpg)** — Tablet dashboard mockup showing inventory info (product, pallets, boxes, occupied range), live temperature/humidity graph, and a weekly inventory bar chart.
 
-> 📷 **`(images/image6.jpg)`** — Warehouse shelving fitted with barcode-labeled bins and IoT gateway/sensor modules along the shelf rail.
+![Estimated Flow chart](../images/image6.jpg) — Warehouse shelving fitted with barcode-labeled bins and IoT gateway/sensor modules along the shelf rail.
 
-> 📷 **`(images/image7.jpg)`** — Example industrial HMI touchscreen dashboard showing device counts and live stats, used as UI/UX inspiration for the local display.
-
-
+📷 **`Fig 1.1`** — Example industrial HMI touchscreen dashboard showing device counts and live stats, used as UI/UX inspiration for the local display.
 
 ---
 [← Back to README](../README.md) · [Next: Software Architecture & Code →](software-architecture.md)
