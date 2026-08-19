@@ -1,0 +1,144 @@
+{
+  "bins": {
+    "BIN-R10K-08": {
+      "name": "10kΩ Resistor · 0805",
+      "category": "Resistors",
+      "department": "SMD Assembly",
+      "qty": 8400,
+      "unit": "pcs",
+      "rate_per_day": 300,
+      "supplier": "Salasar Electronics",
+      "price": 0.4,
+      "batches": [
+        { "id": "B-3301", "firstScanned": "2026-07-20", "initial": 8400, "remaining": 8400 }
+      ]
+    },
+    "BIN-R10K-ALT": {
+      "name": "10kΩ Resistor · 0805 (reserve reel)",
+      "category": "Resistors",
+      "department": "Packaging Bay",
+      "qty": 3000,
+      "unit": "pcs",
+      "rate_per_day": 20,
+      "supplier": "Salasar Electronics",
+      "price": 0.4,
+      "batches": [
+        { "id": "B-3320", "firstScanned": "2026-06-11", "initial": 3000, "remaining": 3000 }
+      ]
+    },
+    "BIN-C100N-06": {
+      "name": "100nF Ceramic Cap · 0603",
+      "category": "Capacitors",
+      "department": "SMD Assembly",
+      "qty": 1200,
+      "unit": "pcs",
+      "rate_per_day": 260,
+      "supplier": "Salasar Electronics",
+      "price": 0.6,
+      "batches": [
+        { "id": "B-2201", "firstScanned": "2026-07-30", "initial": 500, "remaining": 400 },
+        { "id": "B-2214", "firstScanned": "2026-08-14", "initial": 1200, "remaining": 800 }
+      ]
+    },
+    "BIN-CONUSBC16": {
+      "name": "USB-C Connector · 16-pin",
+      "category": "Connectors",
+      "department": "Mechanical Stores",
+      "qty": 340,
+      "unit": "pcs",
+      "rate_per_day": 40,
+      "supplier": "Deepak Trading Co",
+      "price": 18,
+      "batches": [
+        { "id": "B-4110", "firstScanned": "2026-08-05", "initial": 400, "remaining": 340 }
+      ]
+    },
+    "BIN-CONUSBC16-B": {
+      "name": "USB-C Connector · 16-pin (spare)",
+      "category": "Connectors",
+      "department": "Packaging Bay",
+      "qty": 500,
+      "unit": "pcs",
+      "rate_per_day": 5,
+      "supplier": "Deepak Trading Co",
+      "price": 18,
+      "batches": [
+        { "id": "B-4130", "firstScanned": "2026-05-22", "initial": 500, "remaining": 500 }
+      ]
+    },
+    "BIN-IC-M328P": {
+      "name": "ATmega328P · TQFP",
+      "category": "ICs",
+      "department": "SMD Assembly",
+      "qty": 900,
+      "unit": "pcs",
+      "rate_per_day": 15,
+      "supplier": "Salasar Electronics",
+      "price": 145,
+      "batches": [
+        { "id": "B-5502", "firstScanned": "2026-07-01", "initial": 1000, "remaining": 900 }
+      ]
+    },
+    "BIN-LED-R06": {
+      "name": "Red LED · 0603",
+      "category": "LEDs",
+      "department": "SMD Assembly",
+      "qty": 2600,
+      "unit": "pcs",
+      "rate_per_day": 210,
+      "supplier": "Deepak Trading Co",
+      "price": 0.5,
+      "batches": [
+        { "id": "B-6010", "firstScanned": "2026-07-25", "initial": 3000, "remaining": 2600 }
+      ]
+    },
+    "BIN-M3X10-SS": {
+      "name": "M3x10 SS Screw",
+      "category": "Fasteners",
+      "department": "Mechanical Stores",
+      "qty": 12000,
+      "unit": "pcs",
+      "rate_per_day": 150,
+      "supplier": "Deepak Trading Co",
+      "price": 0.9,
+      "batches": [
+        { "id": "B-7101", "firstScanned": "2026-06-30", "initial": 12000, "remaining": 12000 }
+      ]
+    },
+    "BIN-PCB-REV4": {
+      "name": "Custom PCB · Rev4",
+      "category": "PCBs",
+      "department": "QC Lab",
+      "qty": 60,
+      "unit": "pcs",
+      "rate_per_day": 25,
+      "supplier": "LocalFab Circuits",
+      "price": 210,
+      "batches": [
+        { "id": "B-8801", "firstScanned": "2026-08-10", "initial": 100, "remaining": 60 }
+      ]
+    },
+    "BIN-CBL-JST2": {
+      "name": "JST 2-pin Cable · 150mm",
+      "category": "Cables",
+      "department": "Packaging Bay",
+      "qty": 2200,
+      "unit": "pcs",
+      "rate_per_day": 90,
+      "supplier": "Deepak Trading Co",
+      "price": 3.2,
+      "batches": [
+        { "id": "B-9001", "firstScanned": "2026-07-05", "initial": 2500, "remaining": 2200 }
+      ]
+    }
+  },
+  "shipments": {
+    "S1": { "id": "S1", "supplier": "Salasar Electronics", "courier": "Delhivery", "ordered": "2026-06-01", "delivered": "2026-06-06", "promisedDays": 5, "item": "10kΩ Resistor reel", "qty": 5000, "tracking": "DL388055", "binId": "BIN-R10K-08" },
+    "S2": { "id": "S2", "supplier": "Salasar Electronics", "courier": "Delhivery", "ordered": "2026-06-10", "delivered": "2026-06-16", "promisedDays": 4, "item": "ATmega328P TQFP tray", "qty": 500, "tracking": "DL388120", "binId": "BIN-IC-M328P" },
+    "S3": { "id": "S3", "supplier": "Deepak Trading Co", "courier": "DTDC", "ordered": "2026-07-10", "delivered": "2026-07-16", "promisedDays": 6, "item": "USB-C Connector box", "qty": 400, "tracking": "DT552091", "binId": "BIN-CONUSBC16" },
+    "S4": { "id": "S4", "supplier": "Deepak Trading Co", "courier": "Blue Dart", "ordered": "2026-06-20", "delivered": "2026-06-23", "promisedDays": 4, "item": "Red LED reel", "qty": 3000, "tracking": "BD119284", "binId": "BIN-LED-R06" },
+    "S5": { "id": "S5", "supplier": "Salasar Electronics", "courier": "Blue Dart", "ordered": "2026-07-15", "delivered": "2026-07-18", "promisedDays": 4, "item": "10kΩ Resistor reel", "qty": 5000, "tracking": "BD119302", "binId": "BIN-R10K-08" },
+    "S6": { "id": "S6", "supplier": "Salasar Electronics", "courier": "Delhivery", "ordered": "2026-08-17", "delivered": null, "promisedDays": 4, "item": "100nF Ceramic Cap reel", "qty": 4000, "tracking": "DL401177", "binId": "BIN-C100N-06" },
+    "S7": { "id": "S7", "supplier": "LocalFab Circuits", "courier": "India Post", "ordered": "2026-08-12", "delivered": null, "promisedDays": 7, "item": "Custom PCB Rev4 batch", "qty": 100, "tracking": "IN220481", "binId": "BIN-PCB-REV4" }
+  }
+}
