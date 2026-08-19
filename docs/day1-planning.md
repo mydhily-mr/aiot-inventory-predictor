@@ -1,6 +1,6 @@
 [← Back to README](../README.md)
 
-## Day -1: Planning
+## Introduction
 <!-- **14 Aug 2026** -->
 
 ### Data Collection
@@ -12,6 +12,24 @@ Feedback was gathered from real inventory users about common problems in physica
 | 1 | Correct **quantity** doesn't necessarily mean correct **inventory** — e.g. a bin meant to hold 100 × 10 kΩ resistors could instead be filled with 100 × 1 kΩ resistors, and a simple count would never catch it. | Camera-based identification |
 | 2 | Manually updating stock in software takes too much time. | Automated sensor updates |
 | 3 | It's hard to know exactly where things are physically located. | Digital display + location tracking |
+| 4 | Component balance data is available only after the final product is completed. | Tracking the remaining components throughout the intermediate production stages is also necessary. |
+
+**Exisiting Systems**
+ 
+ FIFO
+- The components received first are used first. This helps prevent old or perishable components from remaining in inventory for too long.
+
+Kanban System
+- Uses visual signals, such as cards or digital alerts, to indicate when components need to be replenished. It helps maintain the required stock level and avoid shortages.
+
+Lean Manufacturing
+- Focuses on reducing waste, excess inventory, and unnecessary processes. The goal is to keep only the inventory needed for production.
+
+ Six sigma
+ - Uses data and statistical methods to reduce errors and variations in processes. In inventory management, it can help improve demand forecasting and reduce inventory-related mistakes. 
+
+ Bulk Manufacturing
+- Produces large quantities of products or components at once. This can reduce production costs but may lead to excess inventory if demand is not accurately predicted. 
 
 **Current situation vs. our improved model**
 
@@ -25,9 +43,12 @@ Our system asks four questions instead:
 
 ### Implementation Model
 
-![Estimated Flow chart](../images/flow_chart.png)
+![Sample Output](../images/pims.png)
+   *Sample Output*
 
-   *Fig 1.1: Estimated Flow chart*
+<!-- ![Estimated Flow chart](../images/flow_chart.png)
+
+   *Fig 1.1: Estimated Flow chart* -->
 
 > **`Fig 1.1`** — System architecture flowchart (Smart Inventory Bin → Camera / Load Cell / RFID → MAX32630FTHR → IoT Link → AI Backend → Image Analysis / Quantity Analysis / Inventory DB → Inventory Verification → Match/Mismatch → Alert & Update)
 
