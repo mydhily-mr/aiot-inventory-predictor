@@ -147,17 +147,29 @@ Reading each column:
 - By default `EMAIL_ENABLED = False`, so right now it just prints `[would email]` — safe to test with the simulator without spamming a real inbox.
 - To actually turn emails on:
   1. On the Gmail account you'll send from: turn on **2-Step Verification**, then go to **Google Account → Security → App Passwords** and generate one (Gmail requires this — it won't accept your normal password).
+
+ ![Gmail settings](../images/gmail.png) — Google Account "App passwords" settings screen. Generating a new app password, naming it (e.g. "aiot_pims").
+
   2. Paste that into `EMAIL_APP_PASSWORD`, fill in `EMAIL_FROM` / `EMAIL_TO`, set `EMAIL_ENABLED = True`.
-
-> 📷 **`image21`** — Google Account "App passwords" settings screen.
-
-> 📷 **`image22`** — Generating a new app password, naming it (e.g. "aiot_pcna").
-
-> 📷 **`image23`** — The generated app password shown, ready to copy into the script.
+  ```c
+EMAIL_ENABLED = True
+EMAIL_FROM = "aXXXXXXXXX@gmail.com"
+EMAIL_APP_PASSWORD = "xxxx xxxx xxxx xxxx"   # not your normal password 
+EMAIL_TO = "bXXXXXXX@gmail.com"
+```
 
 - Two things set as defaults that you should sanity-check once real data exists:
   - The **24-hour cooldown** between repeat alerts for the same bin — change `ALERT_COOLDOWN_HOURS` if you want it more/less frequent.
+
+```c
+ALERT_COOLDOWN_HOURS = 24
+```
+
   - The **3+2 day default lead time** — that's a placeholder until you know each real component's actual reorder time.
+  ```c
+DEFAULT_REORDER_LEAD_DAYS = 3
+DEFAULT_REORDER_BUFFER_DAYS = 2
+```
 - You can override this per bin by adding `reorder_lead_days` directly on that bin's node in Firebase.
 
 **WhatsApp via CallMeBot — free, no signup, one HTTP call:**
@@ -168,7 +180,7 @@ Reading each column:
 
 **Setup (do this once):**
 
-1. Save `+34 613 01 49 37` to your phone contacts as anything you like (this is CallMeBot's official bot number — if it doesn't respond, check [callmebot.com](https://www.callmebot.com), they occasionally rotate to a backup number when the primary fills up).
+1. Save `+34 644 33 66 63` to your phone contacts as anything you like (this is CallMeBot's official bot number — if it doesn't respond, check [callmebot.com](https://www.callmebot.com), they occasionally rotate to a backup number when the primary fills up).
 2. From your own WhatsApp, message that contact:
    ```
    I allow callmebot to send me messages
