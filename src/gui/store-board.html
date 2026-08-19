@@ -1,474 +1,296 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-shift="day">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Store Board — SMD Component Inventory</title>
-<script>
-// Set theme before first paint to avoid a flash of the wrong mode.
-(function(){
-  try{
-    var t = localStorage.getItem('store-board-theme');
-    if(t === 'light' || t === 'dark'){ document.documentElement.setAttribute('data-theme', t); }
-  }catch(e){}
-})();
-</script>
+<title>Store Board — SMD &amp; Mechanical Parts Manifest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<!-- Firebase (optional — only used once CONFIG.useFirebase is set to true below) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js" onerror="console.warn('Firebase SDK failed to load — falling back to demo data')"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-database-compat.min.js" onerror="console.warn('Firebase SDK failed to load — falling back to demo data')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js" onerror="console.warn('Firebase SDK failed to load — staying on demo data')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-database-compat.min.js" onerror="console.warn('Firebase SDK failed to load — staying on demo data')"></script>
 <style>
-  /* ================= THEME TOKENS ================= */
-  :root,
-  [data-theme="dark"]{
-    --bg: #050b12;
-    --surface: #0c1922;
-    --surface-2: #0a141c;
-    --ink: #e7f6fb;
-    --ink-soft: #6c8fa3;
-    --line: #17313f;
-    --line-bright: #21506a;
-
-    --amber: #ff9d3d;
-    --cyan: #3fe6f5;
-    --cyan-dim: rgba(63,230,245,0.16);
-    --ok: #35e0a0;
-    --ok-bg: rgba(53,224,160,0.12);
-    --warn: #ffbb47;
-    --warn-bg: rgba(255,187,71,0.12);
-    --crit: #ff5470;
-    --crit-bg: rgba(255,84,112,0.12);
-
-    --chart-fill: rgba(63,230,245,0.08);
-    --tooltip-bg: #0c1922;
-    --tooltip-border: #21506a;
-
-    --dot-grid: rgba(63,230,245,0.05);
-    --frame-border: rgba(255,157,61,0.55);
-    --frame-tint: rgba(255,157,61,0.10);
-    --frame-bg: #08121a;
-    --frame-shadow: 0 0 0 1px rgba(255,157,61,0.08), 0 30px 60px rgba(0,0,0,0.45);
-    --bolt-grad: radial-gradient(circle at 35% 32%, #6b4a26, #16100a 72%);
-    --bolt-ring: rgba(255,157,61,0.3);
-
-    --glow-cyan: 0 0 10px rgba(63,230,245,.5), 0 0 24px rgba(63,230,245,.2);
-    --glow-amber: 0 0 10px rgba(255,157,61,.5);
-    --glow-ok: 0 0 10px rgba(53,224,160,.55), 0 0 24px rgba(53,224,160,.22);
-    --glow-warn: 0 0 10px rgba(255,187,71,.55), 0 0 24px rgba(255,187,71,.22);
-    --glow-crit: 0 0 10px rgba(255,84,112,.55), 0 0 24px rgba(255,84,112,.22);
-    --card-edge-glow: 0 0 10px var(--status-color, transparent);
-    --card-active-ring: 0 0 0 1px var(--status-color, var(--cyan)), 0 4px 20px rgba(0,0,0,0.4);
+  :root, [data-shift="day"]{
+    --paper: #E7DBBE;
+    --card: #F6EEDC;
+    --card-alt: #EEE2C2;
+    --ink: #2A2216;
+    --ink-soft: #77694C;
+    --line: #C4B285;
+    --line-strong: #A8925C;
+    --red: #A23C2C;      --red-bg: rgba(162,60,44,0.10);
+    --green: #43633C;    --green-bg: rgba(67,99,60,0.10);
+    --amber: #A9791D;    --amber-bg: rgba(169,121,29,0.12);
+    --accent: #C99A2E;
+    --shadow: 0 10px 24px rgba(42,34,22,0.14);
   }
-  [data-theme="light"]{
-    --bg: #EEF1EC;
-    --surface: #FFFFFF;
-    --surface-2: #F4F6F1;
-    --ink: #142129;
-    --ink-soft: #5c6f76;
-    --line: #DBE1D9;
-    --line-bright: #B9CBCE;
-
-    --amber: #B5590E;
-    --cyan: #0E7C86;
-    --cyan-dim: rgba(14,124,134,0.14);
-    --ok: #1F8A55;
-    --ok-bg: rgba(31,138,85,0.10);
-    --warn: #A5700D;
-    --warn-bg: rgba(165,112,13,0.10);
-    --crit: #C23B3B;
-    --crit-bg: rgba(194,59,59,0.10);
-
-    --chart-fill: rgba(14,124,134,0.08);
-    --tooltip-bg: #FFFFFF;
-    --tooltip-border: #DBE1D9;
-
-    --dot-grid: rgba(14,124,134,0.06);
-    --frame-border: rgba(181,89,14,0.35);
-    --frame-tint: rgba(181,89,14,0.05);
-    --frame-bg: #F6F4EF;
-    --frame-shadow: 0 0 0 1px rgba(181,89,14,0.08), 0 20px 44px rgba(20,30,25,0.10);
-    --bolt-grad: radial-gradient(circle at 35% 32%, #d8d3c8, #9a9488 72%);
-    --bolt-ring: rgba(181,89,14,0.25);
-
-    --glow-cyan: none;
-    --glow-amber: none;
-    --glow-ok: none;
-    --glow-warn: none;
-    --glow-crit: none;
-    --card-edge-glow: none;
-    --card-active-ring: 0 4px 14px rgba(20,30,25,0.10);
+  [data-shift="night"]{
+    --paper: #201A10;
+    --card: #2C2417;
+    --card-alt: #362C1A;
+    --ink: #EFE3C4;
+    --ink-soft: #9D8A64;
+    --line: #473A22;
+    --line-strong: #5C4B2B;
+    --red: #DD6F55;      --red-bg: rgba(221,111,85,0.16);
+    --green: #86AC72;    --green-bg: rgba(134,172,114,0.16);
+    --amber: #E3AC45;    --amber-bg: rgba(227,172,69,0.18);
+    --accent: #E3AC45;
+    --shadow: 0 10px 30px rgba(0,0,0,0.55);
   }
-
   *{box-sizing:border-box;}
-  html{ color-scheme: dark; }
-  html[data-theme="light"]{ color-scheme: light; }
   body{
-    margin:0;
-    background:
-      radial-gradient(circle at 1px 1px, var(--dot-grid) 1px, transparent 0) 0 0/24px 24px,
-      var(--bg);
-    color:var(--ink);
-    font-family:'Inter',sans-serif;
-    -webkit-font-smoothing:antialiased;
-    transition:background-color .25s ease, color .25s ease;
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif;
+    transition:background-color .2s ease, color .2s ease;
   }
-  .mono{font-family:'JetBrains Mono',monospace;}
-  .display{font-family:'Space Grotesk',sans-serif;}
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
 
-  /* ---- device frame (the HMI enclosure) ---- */
-  .device-frame{
-    position:relative;
-    max-width:1244px;
-    margin:22px auto;
-    border:1px solid var(--frame-border);
-    border-radius:16px;
-    padding:3px;
-    background:
-      linear-gradient(180deg, var(--frame-tint), rgba(0,0,0,0) 45%),
-      var(--frame-bg);
-    box-shadow:var(--frame-shadow);
-    transition:border-color .25s ease, background-color .25s ease, box-shadow .25s ease;
-  }
-  .device-inner{
-    background:var(--bg);
-    border-radius:13px;
-    overflow:hidden;
-  }
-  .bolt{
-    position:absolute; width:11px; height:11px; border-radius:50%;
-    background:var(--bolt-grad);
-    box-shadow:0 0 0 2px var(--bolt-ring), inset 0 0 3px rgba(0,0,0,0.9);
-    z-index:2;
-  }
-  .bolt.tl{top:11px; left:11px;}
-  .bolt.tr{top:11px; right:11px;}
-  .bolt.bl{bottom:11px; left:11px;}
-  .bolt.br{bottom:11px; right:11px;}
+  .zigzag{ height:10px; background:
+    linear-gradient(135deg, var(--paper) 25%, transparent 25%) -5px 0,
+    linear-gradient(225deg, var(--paper) 25%, transparent 25%) -5px 0,
+    linear-gradient(315deg, var(--paper) 25%, transparent 25%) 0 0,
+    linear-gradient(45deg, var(--paper) 25%, transparent 25%) 0 0;
+    background-size:10px 10px; background-color:var(--card); }
 
-  /* ---- topbar ---- */
   header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:22px 32px;
-    border-bottom:1px solid var(--line);
-    background:var(--surface-2);
+    background:var(--card); border-bottom:1px solid var(--line);
+    padding:20px 32px 14px;
   }
-  .brand-block{display:flex; align-items:center; gap:14px;}
-  .brand-mark{
-    width:38px; height:38px;
-    border-radius:8px;
-    background:linear-gradient(160deg, var(--surface), var(--surface-2));
-    border:1px solid var(--cyan);
-    box-shadow:0 0 12px var(--cyan-dim), inset 0 0 8px var(--cyan-dim);
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
+  .head-row{ display:flex; justify-content:space-between; align-items:flex-start; max-width:1180px; margin:0 auto; }
+  .brand h1{ font-size:34px; margin:0; line-height:1; }
+  .brand p{ margin:4px 0 0; font-size:13px; color:var(--ink-soft); }
+  .head-right{ text-align:right; }
+  .shift-toggle{
+    display:inline-flex; border:1px solid var(--line-strong); border-radius:20px; overflow:hidden;
+    background:var(--card-alt); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:11px;
   }
-  .brand-mark span{
-    color:var(--cyan); font-family:'JetBrains Mono',monospace;
-    font-size:11px; font-weight:700; letter-spacing:0.02em;
-    text-shadow:var(--glow-cyan);
+  .shift-toggle button{
+    border:none; background:transparent; color:var(--ink-soft); padding:6px 12px; cursor:pointer;
+    font-family:inherit; font-size:inherit; letter-spacing:0.05em; text-transform:uppercase;
   }
-  .brand-text h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:18px; font-weight:600; margin:0; letter-spacing:-0.01em;
-    color:var(--ink);
-  }
-  .brand-text p{
-    margin:2px 0 0; font-size:12.5px; color:var(--ink-soft);
-  }
+  .shift-toggle button.active{ background:var(--accent); color:var(--paper); font-weight:700; }
+  .clock{ margin-top:8px; font-size:12px; color:var(--ink-soft); }
+  .sync{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .sync .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ink-soft); margin-right:5px; }
+  .sync .dot.live{ background:var(--green); }
 
-  .header-right{ display:flex; align-items:center; gap:18px; }
+  main{ max-width:1180px; margin:0 auto; padding:26px 32px 60px; }
+  section{ margin-bottom:40px; }
+  .section-label{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+  .section-label h2{ font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.04em; margin:0; }
+  .section-label .hint{ font-size:12px; color:var(--ink-soft); }
 
-  /* ---- theme toggle ---- */
-  .theme-toggle{ background:none; border:none; padding:0; cursor:pointer; }
-  .ttrack{
-    position:relative; width:50px; height:27px; border-radius:999px;
-    background:var(--surface); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 6px;
-    transition:background-color .2s ease, border-color .2s ease;
+  /* stamp */
+  .stamp{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:10.5px;
+    letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border:2px solid currentColor;
+    border-radius:3px; position:relative; background:var(--card);
   }
-  .ticon{ width:13px; height:13px; color:var(--ink-soft); position:relative; z-index:1; transition:color .2s ease; }
-  [data-theme="light"] .ticon.sun{ color:var(--amber); }
-  [data-theme="dark"] .ticon.moon{ color:var(--cyan); }
-  .tknob{
-    position:absolute; top:2.5px; left:2.5px; width:20px; height:20px; border-radius:50%;
-    background:var(--cyan); box-shadow:var(--glow-cyan);
-    transform:translateX(23px);
-    transition:transform .25s cubic-bezier(.4,0,.2,1), background-color .2s ease;
-  }
-  [data-theme="light"] .tknob{ transform:translateX(0); background:var(--amber); box-shadow:none; }
+  .stamp::after{ content:''; position:absolute; inset:2px; border:1px solid currentColor; border-radius:2px; opacity:.45; }
+  .stamp-red{ color:var(--red); background:var(--red-bg); transform:rotate(-3deg); }
+  .stamp-green{ color:var(--green); background:var(--green-bg); transform:rotate(2deg); }
+  .stamp-amber{ color:var(--amber); background:var(--amber-bg); transform:rotate(-2deg); }
 
-  .sync-block{text-align:right; font-size:12px; color:var(--ink-soft);}
-  .sync-dot{
-    display:inline-block; width:7px; height:7px; border-radius:50%;
-    background:var(--ink-soft); margin-right:6px;
-    box-shadow:0 0 0 3px rgba(108,143,163,0.15);
-    transition:background-color .2s ease, box-shadow .2s ease;
+  /* priority manifest strip */
+  .strip{ display:flex; gap:14px; overflow-x:auto; padding-bottom:6px; }
+  .ticket{
+    flex:0 0 190px; background:var(--card); border:1px dashed var(--line-strong); border-radius:6px 6px 0 0;
+    padding:14px 14px 4px; position:relative;
   }
-  .sync-dot.live{ background:var(--cyan); box-shadow:0 0 0 3px var(--cyan-dim), 0 0 8px var(--cyan); }
-  .sync-block .mono{color:var(--cyan); font-size:12.5px; text-shadow:var(--glow-cyan);}
+  .ticket .rank{ font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--ink-soft); line-height:1; }
+  .ticket .name{ font-weight:600; font-size:13.5px; margin:6px 0 8px; }
+  .ticket .days{ font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; }
+  .ticket .days-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
 
-  main{max-width:1180px; margin:0 auto; padding:28px 32px 60px;}
+  /* bin grid */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px; }
+  .tag{
+    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; cursor:pointer;
+    box-shadow:var(--shadow); transition:transform .15s ease, border-color .15s ease;
+  }
+  .tag:hover{ transform:translateY(-2px); border-color:var(--line-strong); }
+  .tag.active{ border-color:var(--accent); border-width:2px; }
+  .tag-hole{ width:14px; height:14px; border-radius:50%; background:var(--paper); border:2px solid var(--line-strong); margin:0 auto 10px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.25); }
+  .tag .bin-id{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); text-align:center; }
+  .tag .name{ font-weight:600; font-size:14.5px; text-align:center; margin:4px 0 10px; }
+  .tag .qty{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:700; text-align:center; }
+  .tag .qty-unit{ font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:4px; }
+  .tag .weight{ font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:10px; }
+  .tag .foot{ display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--line); padding-top:10px; }
+  .tag .eta{ font-family:'IBM Plex Mono',monospace; font-size:12px; }
+  .tag .fifo-flag{ margin-top:8px; font-size:10.5px; color:var(--red); text-align:center; font-weight:600; }
 
-  /* ---- stat strip ---- */
-  .stats{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:1px;
-    background:var(--line);
-    border:1px solid var(--line);
-    border-radius:10px;
-    overflow:hidden;
-    margin-bottom:32px;
-  }
-  .stat{
-    background:var(--surface);
-    padding:16px 20px;
-  }
-  .stat .num{
-    font-family:'JetBrains Mono',monospace;
-    font-size:28px; font-weight:700; letter-spacing:-0.01em;
-    color:var(--cyan);
-    text-shadow:var(--glow-cyan);
-  }
-  .stat .label{
-    font-size:11px; color:var(--ink-soft);
-    text-transform:uppercase; letter-spacing:0.08em;
-    margin-top:5px;
-  }
-  .stat.crit .num{color:var(--crit); text-shadow:var(--glow-crit);}
-  .stat.warn .num{color:var(--warn); text-shadow:var(--glow-warn);}
-  .stat.ok .num{color:var(--ok); text-shadow:var(--glow-ok);}
+  /* detail panel */
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:8px; padding:20px 22px 14px; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; }
+  .panel-head h3{ font-family:'Bebas Neue',sans-serif; font-size:22px; margin:0; }
+  .panel-head .sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; }
+  .reorder-note{ background:var(--card-alt); border:1px dashed var(--line-strong); border-radius:6px; padding:10px 14px; font-size:12.5px; margin:14px 0; }
+  .reorder-note b{ font-family:'IBM Plex Mono',monospace; }
+  .chart-wrap{ height:220px; background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:10px 6px 4px; margin-top:6px; }
+  .legend-row{ display:flex; gap:18px; margin-top:8px; padding-top:10px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); }
+  .legend-row span{ display:flex; align-items:center; gap:6px; }
+  .sw{ width:14px; height:2px; display:inline-block; }
+  .sw-ink{ background:var(--ink); }
+  .sw-amber{ background:var(--amber); border-top:2px dashed var(--amber); }
 
-  /* ---- section label ---- */
-  .section-label{
-    display:flex; align-items:baseline; justify-content:space-between;
-    margin-bottom:14px;
+  /* shipments */
+  .dropzone{
+    border:2px dashed var(--line-strong); border-radius:8px; padding:26px; text-align:center;
+    background:var(--card); cursor:pointer; margin-bottom:18px;
   }
-  .section-label h2{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:13px; font-weight:600;
-    text-transform:uppercase; letter-spacing:0.1em;
-    margin:0; color:var(--amber);
-  }
-  .section-label .hint{font-size:12px; color:var(--ink-soft);}
+  .dropzone:hover{ border-color:var(--accent); }
+  .dropzone .label{ font-weight:600; font-size:14px; }
+  .dropzone .sub{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .dropzone input{ display:none; }
+  .parse-status{ font-size:12.5px; color:var(--ink-soft); margin-bottom:14px; min-height:16px; }
 
-  /* ---- bin grid ---- */
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
-    gap:14px;
-    margin-bottom:36px;
-  }
-  .card{
-    position:relative;
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:16px 16px 14px 18px;
-    cursor:pointer;
-    transition:box-shadow .15s ease, transform .15s ease, border-color .15s ease, background-color .25s ease;
-  }
-  .card[data-status="ok"]{ --status-color:var(--ok); }
-  .card[data-status="warn"]{ --status-color:var(--warn); }
-  .card[data-status="crit"]{ --status-color:var(--crit); }
-  .card::before{
-    content:'';
-    position:absolute; left:0; top:0; bottom:0;
-    width:4px;
-    border-radius:10px 0 0 10px;
-    background:var(--status-color, var(--ok));
-    box-shadow:var(--card-edge-glow);
-  }
-  .card:hover{ box-shadow:0 4px 20px rgba(0,0,0,0.16); transform:translateY(-1px); border-color:var(--line-bright); }
-  [data-theme="dark"] .card:hover{ box-shadow:0 4px 20px rgba(0,0,0,0.4); }
-  .card.active{ border-color:var(--status-color, var(--cyan)); box-shadow:var(--card-active-ring); }
+  .ship-list{ display:flex; flex-direction:column; gap:12px; }
+  .ship-card{ background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .ship-top{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; align-items:baseline; }
+  .ship-top .who{ font-weight:600; }
+  .ship-top .track{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
+  .timeline{ display:flex; gap:0; margin-top:12px; }
+  .tl-stage{ flex:1; text-align:center; position:relative; font-size:10px; color:var(--ink-soft); }
+  .tl-stage .bar{ height:4px; background:var(--line); margin-bottom:6px; border-radius:2px; }
+  .tl-stage.reached .bar{ background:var(--green); }
+  .tl-stage.current .bar{ background:var(--amber); }
+  .tl-date{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; }
+  .sim-note{ font-size:10.5px; color:var(--ink-soft); font-style:italic; margin-top:8px; }
 
-  .card .bin-id{
-    font-size:11px; color:var(--ink-soft);
-    letter-spacing:0.03em;
-  }
-  .card .name{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:15.5px; font-weight:600;
-    margin:3px 0 12px;
-    color:var(--ink);
-  }
-  .card .qty-row{
-    display:flex; align-items:baseline; gap:6px;
-    margin-bottom:2px;
-  }
-  .card .qty{
-    font-family:'JetBrains Mono',monospace;
-    font-size:25px; font-weight:700;
-    color:var(--cyan);
-    text-shadow:var(--glow-cyan);
-  }
-  .card .qty-unit{font-size:11.5px; color:var(--ink-soft);}
-  .card .weight{font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;}
+  /* scorecard */
+  .score-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .score-card{ background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 18px; }
+  .score-card h4{ font-family:'Bebas Neue',sans-serif; font-size:16px; margin:0 0 10px; letter-spacing:.04em; }
+  .score-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13px; }
+  .score-row:last-child{ border-bottom:none; }
+  .score-row .metrics{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
+  .best-pick{ font-size:11px; color:var(--green); font-weight:700; margin-left:6px; }
 
-  .card .eta-row{
-    display:flex; align-items:center; justify-content:space-between;
-    padding-top:11px; border-top:1px solid var(--line);
-  }
-  .card .eta{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12.5px; font-weight:500;
-    color:var(--ink);
-  }
-  .badge{
-    font-size:10.5px; font-weight:600;
-    padding:3px 9px; border-radius:20px;
-    text-transform:uppercase; letter-spacing:0.03em;
-    border:1px solid currentColor;
-  }
-  .badge.ok{ color:var(--ok); background:var(--ok-bg); }
-  .badge.warn{ color:var(--warn); background:var(--warn-bg); }
-  .badge.crit{ color:var(--crit); background:var(--crit-bg); }
+  /* fifo */
+  .fifo-list{ display:flex; flex-direction:column; gap:10px; }
+  .fifo-row{ display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px 14px; font-size:13px; }
+  .fifo-row.ok{ opacity:.7; }
+  .fifo-empty{ font-size:13px; color:var(--ink-soft); padding:10px 0; }
 
-  /* ---- detail panel ---- */
-  .panel{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:22px 24px 12px;
-    transition:background-color .25s ease, border-color .25s ease;
-  }
-  .panel-head{
-    display:flex; justify-content:space-between; align-items:flex-start;
-    margin-bottom:6px;
-  }
-  .panel-head h3{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:16px; margin:0;
-    color:var(--ink);
-  }
-  .panel-head .sub{font-size:12px; color:var(--ink-soft); margin-top:3px;}
-  .panel-head .eta-big{
-    text-align:right;
-  }
-  .panel-head .eta-big .n{
-    font-family:'JetBrains Mono',monospace;
-    font-size:24px; font-weight:700;
-    color:var(--amber);
-    text-shadow:var(--glow-amber);
-  }
-  .panel-head .eta-big .n.ok{ color:var(--ok); text-shadow:var(--glow-ok); }
-  .panel-head .eta-big .n.warn{ color:var(--warn); text-shadow:var(--glow-warn); }
-  .panel-head .eta-big .n.crit{ color:var(--crit); text-shadow:var(--glow-crit); }
-  .panel-head .eta-big .l{ font-size:11px; color:var(--ink-soft); }
-  .chart-wrap{ height:220px; margin-top:14px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:10px 6px 4px; }
-  .legend-row{
-    display:flex; gap:18px; margin-top:8px; padding-top:10px;
-    border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft);
-  }
-  .legend-row span{display:flex; align-items:center; gap:6px;}
-  .legend-swatch{width:14px; height:2px; display:inline-block;}
-  .swatch-cyan{ background:var(--cyan); }
-  .swatch-amber{ background:var(--amber); opacity:.75; border-top:2px dashed var(--amber); }
-
-  footer{
-    max-width:1180px; margin:0 auto; padding:0 32px 40px;
-    font-size:12px; color:var(--ink-soft); line-height:1.6;
-  }
-  footer strong{color:var(--ink);}
+  footer{ max-width:1180px; margin:0 auto; padding:0 32px 50px; font-size:12px; color:var(--ink-soft); line-height:1.6; }
+  footer strong{ color:var(--ink); }
 
   @media (max-width:640px){
-    header{padding:16px 18px;}
-    main{padding:20px 18px 40px;}
-    .stats{grid-template-columns:repeat(2,1fr);}
-    .device-frame{ margin:12px; }
+    header{padding:16px 18px 12px;} main{padding:20px 18px 40px;}
+    .score-grid{grid-template-columns:1fr;}
+    .head-row{flex-direction:column; gap:12px;}
+    .head-right{text-align:left;}
   }
 </style>
 </head>
 <body>
 
-<div class="device-frame">
-  <div class="bolt tl"></div>
-  <div class="bolt tr"></div>
-  <div class="bolt bl"></div>
-  <div class="bolt br"></div>
-  <div class="device-inner">
-
 <header>
-  <div class="brand-block">
-    <div class="brand-mark"><span>SB</span></div>
-    <div class="brand-text">
+  <div class="head-row">
+    <div class="brand">
       <h1>Store Board</h1>
-      <p>Predictive Component Inventory — SMD Line 3</p>
+      <p>Predictive Parts Manifest — SMD &amp; Mechanical Bins</p>
     </div>
-  </div>
-  <div class="header-right">
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light and dark mode" aria-pressed="false">
-      <span class="ttrack">
-        <svg class="ticon sun" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="8" cy="8" r="3.2" fill="currentColor"/>
-          <g stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
-            <line x1="8" y1="0.6" x2="8" y2="2.3"/><line x1="8" y1="13.7" x2="8" y2="15.4"/>
-            <line x1="0.6" y1="8" x2="2.3" y2="8"/><line x1="13.7" y1="8" x2="15.4" y2="8"/>
-            <line x1="2.6" y1="2.6" x2="3.8" y2="3.8"/><line x1="12.2" y1="12.2" x2="13.4" y2="13.4"/>
-            <line x1="2.6" y1="13.4" x2="3.8" y2="12.2"/><line x1="12.2" y1="3.8" x2="13.4" y2="2.6"/>
-          </g>
-        </svg>
-        <svg class="ticon moon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13.5 9.6A6 6 0 1 1 6.4 2.5a5 5 0 0 0 7.1 7.1z" fill="currentColor"/>
-        </svg>
-        <span class="tknob"></span>
-      </span>
-    </button>
-    <div class="sync-block">
-      <div><span class="sync-dot" id="sync-dot"></span><span id="source-label">Demo data</span></div>
-      <div class="mono" id="clock">—</div>
+    <div class="head-right">
+      <div class="shift-toggle" role="group" aria-label="Display mode">
+        <button id="btn-day" class="active" onclick="setShift('day')">Day Shift</button>
+        <button id="btn-night" onclick="setShift('night')">Night Shift</button>
+      </div>
+      <div class="sync"><span class="dot" id="sync-dot"></span><span id="source-label">Demo data</span></div>
+      <div class="clock" id="clock">—</div>
     </div>
   </div>
 </header>
+<div class="zigzag"></div>
 
 <main>
-  <div class="stats" id="stats"></div>
 
-  <div class="section-label">
-    <h2>Bins</h2>
-    <span class="hint">Tap a bin to see its consumption forecast</span>
-  </div>
-  <div class="grid" id="grid"></div>
+  <section>
+    <div class="section-label">
+      <h2>Priority Manifest — Runs Out First</h2>
+      <span class="hint">Ranked soonest-to-empty, predicted from live weight trend</span>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
 
-  <div class="section-label">
-    <h2>Consumption Forecast</h2>
-  </div>
-  <div class="panel">
-    <div class="panel-head">
-      <div>
-        <h3 id="panel-name">—</h3>
-        <div class="sub" id="panel-sub">—</div>
+  <section>
+    <div class="section-label">
+      <h2>Bins</h2>
+      <span class="hint">Tap a bin for its forecast and reorder timing</span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3 id="panel-name">—</h3>
+          <div class="sub" id="panel-sub">—</div>
+        </div>
       </div>
-      <div class="eta-big">
-        <div class="n" id="panel-eta">—</div>
-        <div class="l">days to empty</div>
+      <div class="reorder-note" id="reorder-note">—</div>
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+      <div class="legend-row">
+        <span><span class="sw sw-ink"></span>Observed weight</span>
+        <span><span class="sw sw-amber"></span>Forecast to empty</span>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="chart"></canvas></div>
-    <div class="legend-row">
-      <span><span class="legend-swatch swatch-cyan"></span>Observed weight</span>
-      <span><span class="legend-swatch swatch-amber"></span>Forecast to empty</span>
+  </section>
+
+  <section>
+    <div class="section-label">
+      <h2>Shipments &amp; Invoices</h2>
+      <span class="hint">Upload an invoice — Claude reads it and logs the shipment</span>
     </div>
-  </div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('invoice-input').click()">
+      <div class="label">Clip an invoice to the board</div>
+      <div class="sub">Image or PDF of a supplier invoice or courier slip</div>
+      <input type="file" id="invoice-input" accept="image/*,.pdf" onchange="handleInvoiceUpload(event)">
+    </div>
+    <div class="parse-status" id="parse-status"></div>
+    <div class="ship-list" id="ship-list"></div>
+  </section>
+
+  <section>
+    <div class="section-label">
+      <h2>Supplier &amp; Courier Scorecard</h2>
+      <span class="hint">From delivered shipment history</span>
+    </div>
+    <div class="score-grid">
+      <div class="score-card">
+        <h4>Suppliers</h4>
+        <div id="supplier-score"></div>
+      </div>
+      <div class="score-card">
+        <h4>Couriers</h4>
+        <div id="courier-score"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">
+      <h2>Stock Rotation Log</h2>
+      <span class="hint">First-scanned batch per bin — flags stock sitting unused while a newer batch is already open</span>
+    </div>
+    <div class="fifo-list" id="fifo-list"></div>
+  </section>
+
 </main>
 
 <footer>
-  <strong>Note:</strong> figures shown are simulated for demo purposes. Once the gateway (ESP-01 → cloud) is wired to the live sensors, this board reads directly from the same feed — no layout changes needed. Built for SMD reel bins first; the same bin-card model extends to fastener bins, raw-material stock, or tool-crib checkout as the system rolls out to other lines.
+  <strong>Note:</strong> bin weight/quantity figures are simulated until the gateway (board → cloud) is wired up — same Firebase feed the sensors will write to. Courier tracking stages are estimated from each courier's historical average lead time; connecting a real courier API would replace the estimate with live scans. Invoice reading calls Claude directly from this page — that works right here in Claude, but a deployed copy of this board would need its own Anthropic API key, ideally called from a small backend rather than the browser.
 </footer>
-
-  </div>
-</div>
 
 <script>
 // ================= CONFIG =================
-// Flip this to true once you've created your Firebase project and pasted
-// your config below. Until then, the board runs on the demo data untouched.
 const CONFIG = {
   useFirebase: false,
   firebaseConfig: {
@@ -479,81 +301,173 @@ const CONFIG = {
 };
 // ============================================
 
+let currentShift = 'day'; // in-memory only — no localStorage in this environment
+
 const demoBins = [
-  { id:'BIN-R10K-08', name:'10kΩ Resistor · 0805', qty:8400, unit:'pcs', weight:340, rate:300 },
-  { id:'BIN-C100N-06', name:'100nF Ceramic Cap · 0603', qty:1200, unit:'pcs', weight:28, rate:260 },
-  { id:'BIN-CONUSBC16', name:'USB-C Connector · 16-pin', qty:340, unit:'pcs', weight:612, rate:40 },
-  { id:'BIN-IC-M328P', name:'ATmega328P · TQFP', qty:900, unit:'pcs', weight:810, rate:15 },
-  { id:'BIN-LED-R06', name:'Red LED · 0603', qty:5200, unit:'pcs', weight:31, rate:500 },
+  { id:'BIN-R10K-08', name:'10kΩ Resistor · 0805', qty:8400, unit:'pcs', weight:340, rate:300, supplier:'Salasar Electronics',
+    batches:[ {id:'B-3301', firstScanned:'2026-07-20', initial:8400, remaining:8400} ] },
+  { id:'BIN-C100N-06', name:'100nF Ceramic Cap · 0603', qty:1200, unit:'pcs', weight:28, rate:260, supplier:'Salasar Electronics',
+    batches:[
+      {id:'B-2201', firstScanned:'2026-07-30', initial:500, remaining:400},
+      {id:'B-2214', firstScanned:'2026-08-14', initial:1200, remaining:800}
+    ] },
+  { id:'BIN-CONUSBC16', name:'USB-C Connector · 16-pin', qty:340, unit:'pcs', weight:612, rate:40, supplier:'Deepak Trading Co',
+    batches:[ {id:'B-4110', firstScanned:'2026-08-05', initial:400, remaining:340} ] },
+  { id:'BIN-IC-M328P', name:'ATmega328P · TQFP', qty:900, unit:'pcs', weight:810, rate:15, supplier:'Salasar Electronics',
+    batches:[ {id:'B-5502', firstScanned:'2026-07-01', initial:1000, remaining:900} ] },
+  { id:'BIN-LED-R06', name:'Red LED · 0603', qty:5200, unit:'pcs', weight:31, rate:500, supplier:'Deepak Trading Co',
+    batches:[ {id:'B-6001', firstScanned:'2026-08-10', initial:5200, remaining:5200} ] },
+];
+
+const demoShipments = [
+  { id:'S1', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-07-01', delivered:'2026-07-05', promisedDays:4, item:'10kΩ Resistor reel', qty:5000, tracking:'DL394821', binId:'BIN-R10K-08' },
+  { id:'S2', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-06-10', delivered:'2026-06-16', promisedDays:4, item:'ATmega328P TQFP tray', qty:500, tracking:'DL388120', binId:'BIN-IC-M328P' },
+  { id:'S3', supplier:'Deepak Trading Co', courier:'DTDC', ordered:'2026-07-10', delivered:'2026-07-16', promisedDays:6, item:'USB-C Connector box', qty:400, tracking:'DT552091', binId:'BIN-CONUSBC16' },
+  { id:'S4', supplier:'Deepak Trading Co', courier:'Blue Dart', ordered:'2026-06-20', delivered:'2026-06-23', promisedDays:4, item:'Red LED reel', qty:5000, tracking:'BD119284', binId:'BIN-LED-R06' },
+  { id:'S5', supplier:'Salasar Electronics', courier:'Blue Dart', ordered:'2026-07-15', delivered:'2026-07-18', promisedDays:4, item:'10kΩ Resistor reel', qty:5000, tracking:'BD119302', binId:'BIN-R10K-08' },
+  { id:'S6', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-08-17', delivered:null, promisedDays:4, item:'100nF Ceramic Cap reel', qty:4000, tracking:'DL401177', binId:'BIN-C100N-06' },
 ];
 
 let bins = demoBins;
+let shipments = demoShipments;
 let dataSourceLabel = 'Demo data (Firebase not connected)';
 
-function computeStatus(days){
-  if(days < 5) return 'crit';
-  if(days < 14) return 'warn';
-  return 'ok';
-}
-const statusLabel = { ok:'Healthy', warn:'Reorder soon', crit:'Critical' };
+function computeStatus(days){ if(days<5) return 'crit'; if(days<14) return 'warn'; return 'ok'; }
+const statusStamp = { ok:['stamp-green','OK'], warn:['stamp-amber','Reorder soon'], crit:['stamp-red','Critical'] };
 
-function annotate(list){
-  list.forEach(b=>{
-    b.days = +(b.qty / b.rate).toFixed(1);
-    b.status = computeStatus(b.days);
-  });
-  return list;
-}
+function annotate(list){ list.forEach(b=>{ b.days = +(b.qty/b.rate).toFixed(1); b.status = computeStatus(b.days); }); return list; }
 annotate(bins);
 
-// ---- theme (reads live CSS variables so chart/canvas colors always match) ----
-function cssVar(name){
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+// ---- supplier / courier stats from delivered shipments ----
+function statsFor(field, name){
+  const rel = shipments.filter(s => s[field]===name && s.delivered);
+  if(!rel.length) return {avgLeadDays:null, onTimePct:null, count:0};
+  const leads = rel.map(s => (new Date(s.delivered) - new Date(s.ordered))/86400000);
+  const avg = leads.reduce((a,b)=>a+b,0)/leads.length;
+  const onTime = rel.filter(s => (new Date(s.delivered)-new Date(s.ordered))/86400000 <= s.promisedDays).length / rel.length * 100;
+  return { avgLeadDays:+avg.toFixed(1), onTimePct:+onTime.toFixed(0), count:rel.length };
 }
-function currentTheme(){
-  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-}
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme', theme);
-  const btn = document.getElementById('theme-toggle');
-  if(btn) btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
-  try{ localStorage.setItem('store-board-theme', theme); }catch(e){}
-  // redraw the chart so its canvas colors pick up the new theme
-  const active = document.querySelector('.card.active');
-  if(active) selectBin(active.dataset.id);
-}
-function initTheme(){
-  const btn = document.getElementById('theme-toggle');
-  btn.addEventListener('click', ()=>{
-    applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
-  });
-  btn.setAttribute('aria-pressed', currentTheme() === 'light' ? 'true' : 'false');
+function uniqueValues(field){ return [...new Set(shipments.map(s=>s[field]))]; }
+
+function renderScorecards(){
+  const suppliers = uniqueValues('supplier').map(n => ({name:n, ...statsFor('supplier', n)}));
+  const couriers = uniqueValues('courier').map(n => ({name:n, ...statsFor('courier', n)}));
+  const bestSupplier = [...suppliers].sort((a,b)=> (b.onTimePct||0)-(a.onTimePct||0) || (a.avgLeadDays||99)-(b.avgLeadDays||99))[0];
+  const bestCourier = [...couriers].sort((a,b)=> (b.onTimePct||0)-(a.onTimePct||0) || (a.avgLeadDays||99)-(b.avgLeadDays||99))[0];
+
+  const rowsHtml = (list, best) => list.map(s => `
+    <div class="score-row">
+      <span>${s.name}${best && s.name===best.name ? '<span class="best-pick">★ best</span>' : ''}</span>
+      <span class="metrics">${s.avgLeadDays ?? '—'}d avg · ${s.onTimePct ?? '—'}% on-time · ${s.count} shipments</span>
+    </div>`).join('');
+
+  document.getElementById('supplier-score').innerHTML = rowsHtml(suppliers, bestSupplier);
+  document.getElementById('courier-score').innerHTML = rowsHtml(couriers, bestCourier);
 }
 
-// ---- grid ----
-const grid = document.getElementById('grid');
-function render(){
-  grid.innerHTML = bins.map(b => `
-    <div class="card" data-status="${b.status}" data-id="${b.id}">
-      <div class="bin-id mono">${b.id}</div>
+// ---- simulated courier tracking timeline ----
+const STAGES = ['Booked','Picked up','In transit','Out for delivery','Delivered'];
+function trackingTimeline(shipment){
+  const lead = statsFor('courier', shipment.courier).avgLeadDays || shipment.promisedDays || 5;
+  const start = new Date(shipment.ordered);
+  const offsets = [0, lead*0.15, lead*0.4, lead*0.85, lead];
+  const now = new Date();
+  return STAGES.map((stage,i)=>{
+    const d = new Date(start.getTime() + offsets[i]*86400000);
+    return { stage, date:d, reached: shipment.delivered ? true : d<=now };
+  });
+}
+function fmtDate(d){ return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}); }
+
+function renderShipments(){
+  const sorted = [...shipments].sort((a,b)=> new Date(b.ordered)-new Date(a.ordered));
+  document.getElementById('ship-list').innerHTML = sorted.map(s=>{
+    const tl = trackingTimeline(s);
+    const lastReachedIdx = tl.reduce((acc,st,i)=> st.reached ? i : acc, 0);
+    return `
+    <div class="ship-card">
+      <div class="ship-top">
+        <span class="who">${s.item} — ${s.qty} units</span>
+        <span class="track">${s.courier} · ${s.tracking}</span>
+      </div>
+      <div class="ship-top" style="margin-top:2px;">
+        <span style="font-size:12px;color:var(--ink-soft);">${s.supplier} · ordered ${fmtDate(new Date(s.ordered))}</span>
+        <span style="font-size:12px;color:var(--ink-soft);">${s.delivered ? 'Delivered '+fmtDate(new Date(s.delivered)) : 'In transit'}</span>
+      </div>
+      <div class="timeline">
+        ${tl.map((st,i)=>`
+          <div class="tl-stage ${st.reached?'reached':''} ${i===lastReachedIdx && !s.delivered ? 'current':''}">
+            <div class="bar"></div>
+            <div>${st.stage}</div>
+            <div class="tl-date">${fmtDate(st.date)}</div>
+          </div>`).join('')}
+      </div>
+      <div class="sim-note">Estimated from ${s.courier}'s historical average lead time — connect a live courier API to replace with real scans.</div>
+    </div>`;
+  }).join('');
+}
+
+// ---- FIFO / stale stock check ----
+function fifoViolations(){
+  const flags = [];
+  bins.forEach(b=>{
+    if(!b.batches || b.batches.length<2) return;
+    const sorted = [...b.batches].sort((x,y)=> new Date(x.firstScanned)-new Date(y.firstScanned));
+    const oldest = sorted[0];
+    const newerDrawn = sorted.slice(1).some(n => n.remaining < n.initial);
+    if(oldest.remaining>0 && newerDrawn){
+      flags.push({ binName:b.name, binId:b.id, batchId:oldest.id, scannedOn:oldest.firstScanned, remaining:oldest.remaining });
+    }
+  });
+  return flags;
+}
+function renderFifo(){
+  const flags = fifoViolations();
+  const el = document.getElementById('fifo-list');
+  if(!flags.length){ el.innerHTML = '<div class="fifo-empty">No stale batches — oldest stock is being drawn first everywhere.</div>'; return; }
+  el.innerHTML = flags.map(f=>`
+    <div class="fifo-row">
+      <span>${f.binName} <span class="mono" style="color:var(--ink-soft);font-size:11px;">(${f.batchId}, scanned ${fmtDate(new Date(f.scannedOn))}, ${f.remaining} left)</span></span>
+      <span class="stamp stamp-red">Check shelf</span>
+    </div>`).join('');
+}
+
+// ---- priority manifest strip ----
+function renderStrip(){
+  const ranked = [...bins].sort((a,b)=> a.days-b.days);
+  document.getElementById('strip').innerHTML = ranked.map((b,i)=>`
+    <div class="ticket zigzag-bottom" data-id="${b.id}" onclick="selectBin('${b.id}')">
+      <div class="rank">#${i+1}</div>
       <div class="name">${b.name}</div>
-      <div class="qty-row">
-        <span class="qty">${b.qty.toLocaleString()}</span>
-        <span class="qty-unit">${b.unit}</span>
-      </div>
-      <div class="weight">${b.weight} g on load cell</div>
-      <div class="eta-row">
-        <span class="eta">${b.days}d left</span>
-        <span class="badge ${b.status}">${statusLabel[b.status]}</span>
-      </div>
-    </div>
-  `).join('');
-  grid.querySelectorAll('.card').forEach(el=>{
-    el.addEventListener('click', ()=> selectBin(el.dataset.id));
-  });
+      <div class="days">${b.days}</div>
+      <div class="days-label">days left</div>
+    </div>`).join('');
 }
 
-// ---- chart ----
+// ---- bin grid ----
+function renderGrid(){
+  const flags = fifoViolations();
+  document.getElementById('grid').innerHTML = bins.map(b=>{
+    const [cls,label] = statusStamp[b.status];
+    const flagged = flags.find(f=>f.binId===b.id);
+    return `
+    <div class="tag" data-id="${b.id}" onclick="selectBin('${b.id}')">
+      <div class="tag-hole"></div>
+      <div class="bin-id">${b.id}</div>
+      <div class="name">${b.name}</div>
+      <div class="qty">${b.qty.toLocaleString()}</div>
+      <div class="qty-unit">${b.unit}</div>
+      <div class="weight">${b.weight} g on load cell · ${b.supplier}</div>
+      <div class="foot">
+        <span class="eta">${b.days}d left</span>
+        <span class="stamp ${cls}">${label}</span>
+      </div>
+      ${flagged ? '<div class="fifo-flag">⚠ old batch unused</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ---- chart + detail panel ----
 let chart;
 function buildSeries(b){
   const days=14, labels=[], observed=[], forecast=[];
@@ -568,7 +482,7 @@ function buildSeries(b){
   let fw = parseFloat(observed[observed.length-1]);
   forecast[forecast.length-1] = fw;
   const daysToZero = Math.ceil(fw/dailyLoss);
-  for(let i=1;i<=Math.min(daysToZero, 14);i++){
+  for(let i=1;i<=Math.min(daysToZero,14);i++){
     labels.push('+'+i+'d');
     fw = Math.max(fw-dailyLoss,0);
     forecast.push(fw.toFixed(1));
@@ -576,102 +490,150 @@ function buildSeries(b){
   }
   return {labels, observed, forecast};
 }
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
 function selectBin(id){
   const b = bins.find(x=>x.id===id);
-  document.querySelectorAll('.card').forEach(c=> c.classList.toggle('active', c.dataset.id===id));
+  document.querySelectorAll('.tag').forEach(c=>c.classList.toggle('active', c.dataset.id===id));
   document.getElementById('panel-name').textContent = b.name;
-  document.getElementById('panel-sub').textContent = `${b.id} · burn rate ≈ ${b.rate} ${b.unit}/day`;
-  const etaEl = document.getElementById('panel-eta');
-  etaEl.textContent = b.days;
-  etaEl.className = 'n ' + b.status;
+  document.getElementById('panel-sub').textContent = `${b.id} · burn rate ≈ ${b.rate} ${b.unit}/day · supplier: ${b.supplier}`;
+
+  const lead = statsFor('supplier', b.supplier).avgLeadDays;
+  const note = document.getElementById('reorder-note');
+  if(lead){
+    const arrival = new Date(Date.now() + lead*86400000);
+    note.innerHTML = `Reorder today → estimated arrival <b>${fmtDate(arrival)}</b> (${lead}d, based on ${b.supplier}'s historical average). Stock runs out in <b>${b.days}d</b>.`;
+  } else {
+    note.innerHTML = `No delivered shipment history yet for ${b.supplier} — reorder timing will appear once a shipment completes.`;
+  }
 
   const {labels, observed, forecast} = buildSeries(b);
   const ctx = document.getElementById('chart').getContext('2d');
   if(chart) chart.destroy();
   chart = new Chart(ctx, {
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        { label:'Observed', data:observed, borderColor:cssVar('--cyan'), backgroundColor:cssVar('--chart-fill'), fill:true, tension:0.3, pointRadius:0, borderWidth:2.5, spanGaps:false },
-        { label:'Forecast', data:forecast, borderColor:cssVar('--amber'), borderDash:[5,4], fill:false, tension:0.3, pointRadius:0, borderWidth:2, spanGaps:false },
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{ mode:'index', intersect:false, backgroundColor:cssVar('--tooltip-bg'), borderColor:cssVar('--tooltip-border'), borderWidth:1, titleColor:cssVar('--ink'), bodyColor:cssVar('--ink') } },
+    data:{ labels, datasets:[
+      { label:'Observed', data:observed, borderColor:cssVar('--ink'), backgroundColor:'transparent', tension:0.3, pointRadius:0, borderWidth:2.5, spanGaps:false },
+      { label:'Forecast', data:forecast, borderColor:cssVar('--amber'), borderDash:[5,4], tension:0.3, pointRadius:0, borderWidth:2, spanGaps:false },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:cssVar('--card'), borderColor:cssVar('--line'), borderWidth:1, titleColor:cssVar('--ink'), bodyColor:cssVar('--ink') } },
       scales:{
-        y:{ title:{display:true, text:'grams on load cell', font:{size:11}, color:cssVar('--ink-soft')}, grid:{color:cssVar('--line')}, ticks:{color:cssVar('--ink-soft')} },
+        y:{ title:{display:true,text:'grams',color:cssVar('--ink-soft'),font:{size:11}}, grid:{color:cssVar('--line')}, ticks:{color:cssVar('--ink-soft')} },
         x:{ grid:{display:false}, ticks:{color:cssVar('--ink-soft')} }
-      }
-    }
+      }}
   });
 }
-function renderAll(){
-  const critCount = bins.filter(b=>b.status==='crit').length;
-  const warnCount = bins.filter(b=>b.status==='warn').length;
-  const okCount = bins.filter(b=>b.status==='ok').length;
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="num">${bins.length}</div><div class="label">Bins tracked</div></div>
-    <div class="stat crit"><div class="num">${critCount}</div><div class="label">Critical</div></div>
-    <div class="stat warn"><div class="num">${warnCount}</div><div class="label">Reorder soon</div></div>
-    <div class="stat ok"><div class="num">${okCount}</div><div class="label">Healthy</div></div>
-  `;
-  render();
-  const fallback = bins.find(b=>b.status==='crit') || bins[0];
-  if(fallback) selectBin(fallback.id);
-  document.getElementById('source-label').textContent = dataSourceLabel;
+
+// ---- invoice upload → Claude extraction ----
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=> res(r.result.split(',')[1]);
+    r.onerror = ()=> rej(new Error('Could not read file'));
+    r.readAsDataURL(file);
+  });
+}
+async function extractInvoiceData(file){
+  const base64 = await fileToBase64(file);
+  const isPdf = file.type === 'application/pdf';
+  const contentBlock = isPdf
+    ? { type:'document', source:{ type:'base64', media_type:'application/pdf', data:base64 } }
+    : { type:'image', source:{ type:'base64', media_type:file.type || 'image/jpeg', data:base64 } };
+  const instruction = `Read this supplier invoice or courier slip for a manufacturing parts warehouse. Respond with ONLY strict JSON, no markdown fences, no preamble:
+{"supplier": string|null, "courier": string|null, "tracking_number": string|null, "invoice_date": "YYYY-MM-DD"|null, "items": [{"name": string, "qty": number, "unit": string}]}
+Use null for anything not present. Items empty array if none found.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6', max_tokens:1000,
+      messages:[{ role:'user', content:[contentBlock, {type:'text', text:instruction}] }]
+    })
+  });
+  const data = await response.json();
+  const textBlock = (data.content||[]).find(b=>b.type==='text');
+  if(!textBlock) throw new Error('No response from model');
+  const cleaned = textBlock.text.replace(/```json|```/g,'').trim();
+  return JSON.parse(cleaned);
+}
+async function handleInvoiceUpload(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('parse-status');
+  statusEl.textContent = 'Reading invoice…';
+  try{
+    const parsed = await extractInvoiceData(file);
+    const newShipment = {
+      id: 'S'+(shipments.length+1),
+      supplier: parsed.supplier || 'Unknown supplier',
+      courier: parsed.courier || 'Unknown courier',
+      ordered: parsed.invoice_date || new Date().toISOString().slice(0,10),
+      delivered: null,
+      promisedDays: 5,
+      item: (parsed.items && parsed.items[0] && parsed.items[0].name) || 'Item (see invoice)',
+      qty: (parsed.items && parsed.items[0] && parsed.items[0].qty) || 0,
+      tracking: parsed.tracking_number || '—',
+      binId: null
+    };
+    shipments = [...shipments, newShipment];
+    if(CONFIG.useFirebase) saveShipmentsToFirebase();
+    statusEl.textContent = `Logged: ${newShipment.supplier} · ${newShipment.item} · tracking ${newShipment.tracking}`;
+    renderShipments(); renderScorecards();
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = 'Could not read this invoice — try a clearer photo or a text-based PDF.';
+  }
 }
 
-// ---- Firebase live wiring (only runs if CONFIG.useFirebase is true) ----
+// ---- shift toggle (in-memory, no persistence) ----
+function setShift(mode){
+  currentShift = mode;
+  document.documentElement.setAttribute('data-shift', mode);
+  document.getElementById('btn-day').classList.toggle('active', mode==='day');
+  document.getElementById('btn-night').classList.toggle('active', mode==='night');
+  const active = document.querySelector('.tag.active');
+  if(active) selectBin(active.dataset.id);
+}
+
+// ---- Firebase (optional live wiring) ----
+function saveShipmentsToFirebase(){
+  try{ firebase.database().ref('shipments').set(shipments); }catch(e){ console.error(e); }
+}
 function initFirebase(){
+  if(!CONFIG.useFirebase) return;
+  if(typeof firebase === 'undefined'){ console.warn('Firebase SDK not available'); return; }
   try{
-    if(!CONFIG.useFirebase){ return; }
-    if(typeof firebase === 'undefined'){
-      console.warn('Firebase SDK not available — staying on demo data');
-      return;
-    }
     firebase.initializeApp(CONFIG.firebaseConfig);
     const db = firebase.database();
     dataSourceLabel = 'Connecting to live gateway…';
     document.getElementById('source-label').textContent = dataSourceLabel;
-
-    db.ref('bins').on('value', snapshot => {
-      const val = snapshot.val();
-      if(!val){ return; } // no data yet — keep showing demo bins
-      const liveBins = Object.entries(val).map(([id, b]) => ({
-        id,
-        name: b.name,
-        qty: b.qty,
-        unit: b.unit || 'pcs',
-        weight: b.weight_g,
-        rate: b.rate_per_day,
-      }));
-      bins = annotate(liveBins);
+    db.ref('bins').on('value', snap=>{
+      const val = snap.val();
+      if(!val) return;
+      bins = annotate(Object.entries(val).map(([id,b])=>({ id, name:b.name, qty:b.qty, unit:b.unit||'pcs', weight:b.weight_g, rate:b.rate_per_day, supplier:b.supplier, batches:b.batches||[] })));
       dataSourceLabel = 'Live — gateway connected';
       document.getElementById('sync-dot').classList.add('live');
       renderAll();
-    }, err => {
-      console.error('Firebase read failed:', err);
-      dataSourceLabel = 'Live sync failed — showing demo data';
-      renderAll();
+    }, err=>{ console.error(err); dataSourceLabel='Live sync failed — showing demo data'; renderAll(); });
+    db.ref('shipments').on('value', snap=>{
+      const val = snap.val();
+      if(val){ shipments = Object.values(val); renderShipments(); renderScorecards(); }
     });
-  }catch(e){
-    console.error('Firebase init error:', e);
-    dataSourceLabel = 'Live sync failed — showing demo data';
-    renderAll();
-  }
+  }catch(e){ console.error(e); dataSourceLabel='Live sync failed — showing demo data'; renderAll(); }
 }
 
+function renderAll(){
+  renderStrip(); renderGrid(); renderShipments(); renderScorecards(); renderFifo();
+  const fallback = [...bins].sort((a,b)=>a.days-b.days)[0];
+  if(fallback) selectBin(fallback.id);
+  document.getElementById('source-label').textContent = dataSourceLabel;
+}
 renderAll();
 initFirebase();
-initTheme();
 
-// ---- clock ----
-function tick(){
-  document.getElementById('clock').textContent = new Date().toLocaleString('en-IN', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
-}
+function tick(){ document.getElementById('clock').textContent = new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}); }
 tick(); setInterval(tick, 30000);
 </script>
 </body>
