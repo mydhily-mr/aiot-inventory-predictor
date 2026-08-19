@@ -1,159 +1,200 @@
 <!doctype html>
-<html lang="en" data-shift="day">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Store Board — SMD &amp; Mechanical Parts Manifest</title>
+<title>AIPMS — AIoT Inventory Management</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js" onerror="console.warn('Firebase SDK failed to load — staying on demo data')"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-database-compat.min.js" onerror="console.warn('Firebase SDK failed to load — staying on demo data')"></script>
 <style>
-  :root, [data-shift="day"]{
-    --paper: #E7DBBE;
-    --card: #F6EEDC;
-    --card-alt: #EEE2C2;
-    --ink: #2A2216;
-    --ink-soft: #77694C;
-    --line: #C4B285;
-    --line-strong: #A8925C;
-    --red: #A23C2C;      --red-bg: rgba(162,60,44,0.10);
-    --green: #43633C;    --green-bg: rgba(67,99,60,0.10);
-    --amber: #A9791D;    --amber-bg: rgba(169,121,29,0.12);
-    --accent: #C99A2E;
-    --shadow: 0 10px 24px rgba(42,34,22,0.14);
+  :root, [data-theme="light"]{
+    --bg:#F2FAF9;
+    --sidebar-a:#0E7C74; --sidebar-b:#0A4F4A; --sidebar-ink:#EAFBF9; --sidebar-ink-soft:#AEE0DA;
+    --card:#FFFFFF; --card-alt:#EAF7F6;
+    --ink:#12302E; --ink-soft:#5E7C79;
+    --line:#D7EEEC; --line-strong:#AEDAD6;
+    --accent:#0E8C82; --accent-ink:#FFFFFF; --accent-2:#7C5CFC;
+    --red:#C0392B; --red-bg:rgba(192,57,43,0.10);
+    --green:#1E8F5F; --green-bg:rgba(30,143,95,0.10);
+    --amber:#B8860B; --amber-bg:rgba(184,134,11,0.12);
+    --shadow: 0 8px 22px rgba(14,44,41,0.09);
   }
-  [data-shift="night"]{
-    --paper: #201A10;
-    --card: #2C2417;
-    --card-alt: #362C1A;
-    --ink: #EFE3C4;
-    --ink-soft: #9D8A64;
-    --line: #473A22;
-    --line-strong: #5C4B2B;
-    --red: #DD6F55;      --red-bg: rgba(221,111,85,0.16);
-    --green: #86AC72;    --green-bg: rgba(134,172,114,0.16);
-    --amber: #E3AC45;    --amber-bg: rgba(227,172,69,0.18);
-    --accent: #E3AC45;
+  [data-theme="dark"]{
+    --bg:#081615;
+    --sidebar-a:#0B2E2A; --sidebar-b:#040F0D; --sidebar-ink:#DFF6F2; --sidebar-ink-soft:#6FA39B;
+    --card:#0F211F; --card-alt:#13302C;
+    --ink:#E4F5F2; --ink-soft:#8AAFAB;
+    --line:#1B3835; --line-strong:#245049;
+    --accent:#2FD9C7; --accent-ink:#04231F; --accent-2:#9C86FF;
+    --red:#F0796A; --red-bg:rgba(240,121,106,0.16);
+    --green:#5FD79A; --green-bg:rgba(95,215,154,0.16);
+    --amber:#F0C15C; --amber-bg:rgba(240,193,92,0.16);
     --shadow: 0 10px 30px rgba(0,0,0,0.55);
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--paper); color:var(--ink);
-    font-family:'IBM Plex Sans',sans-serif;
-    transition:background-color .2s ease, color .2s ease;
-  }
-  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.03em;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  a{color:inherit;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; transition:background-color .2s ease,color .2s ease; }
+  .mono{ font-family:'IBM Plex Mono',monospace; }
+  a{ color:inherit; }
   :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important;} }
+  button, select, input{ font-family:inherit; }
 
-  .zigzag{ height:10px; background:
-    linear-gradient(135deg, var(--paper) 25%, transparent 25%) -5px 0,
-    linear-gradient(225deg, var(--paper) 25%, transparent 25%) -5px 0,
-    linear-gradient(315deg, var(--paper) 25%, transparent 25%) 0 0,
-    linear-gradient(45deg, var(--paper) 25%, transparent 25%) 0 0;
-    background-size:10px 10px; background-color:var(--card); }
+  .app{ display:flex; min-height:100vh; }
 
-  header{
-    background:var(--card); border-bottom:1px solid var(--line);
-    padding:20px 32px 14px;
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:230px; flex:0 0 230px; background:linear-gradient(180deg,var(--sidebar-a),var(--sidebar-b));
+    color:var(--sidebar-ink); padding:22px 16px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
   }
-  .head-row{ display:flex; justify-content:space-between; align-items:flex-start; max-width:1180px; margin:0 auto; }
-  .brand h1{ font-size:34px; margin:0; line-height:1; }
-  .brand p{ margin:4px 0 0; font-size:13px; color:var(--ink-soft); }
-  .head-right{ text-align:right; }
-  .shift-toggle{
-    display:inline-flex; border:1px solid var(--line-strong); border-radius:20px; overflow:hidden;
-    background:var(--card-alt); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:11px;
-  }
-  .shift-toggle button{
-    border:none; background:transparent; color:var(--ink-soft); padding:6px 12px; cursor:pointer;
-    font-family:inherit; font-size:inherit; letter-spacing:0.05em; text-transform:uppercase;
-  }
-  .shift-toggle button.active{ background:var(--accent); color:var(--paper); font-weight:700; }
-  .clock{ margin-top:8px; font-size:12px; color:var(--ink-soft); }
-  .sync{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
-  .sync .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--ink-soft); margin-right:5px; }
-  .sync .dot.live{ background:var(--green); }
+  .logo{ display:flex; align-items:center; gap:10px; padding:0 4px 18px; border-bottom:1px solid rgba(255,255,255,0.14); margin-bottom:16px; }
+  .logo .mark{ width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; }
+  .logo .name{ font-weight:700; font-size:15px; letter-spacing:0.02em; }
+  .logo .sub{ font-size:10px; color:var(--sidebar-ink-soft); margin-top:1px; }
 
-  main{ max-width:1180px; margin:0 auto; padding:26px 32px 60px; }
-  section{ margin-bottom:40px; }
-  .section-label{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
-  .section-label h2{ font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.04em; margin:0; }
-  .section-label .hint{ font-size:12px; color:var(--ink-soft); }
-
-  /* stamp */
-  .stamp{
-    display:inline-block; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:10.5px;
-    letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border:2px solid currentColor;
-    border-radius:3px; position:relative; background:var(--card);
+  .nav{ display:flex; flex-direction:column; gap:2px; margin-bottom:20px; }
+  .nav button{
+    all:unset; cursor:pointer; padding:9px 12px; border-radius:7px; font-size:13.5px; font-weight:500;
+    color:var(--sidebar-ink-soft); display:flex; align-items:center; gap:9px;
   }
-  .stamp::after{ content:''; position:absolute; inset:2px; border:1px solid currentColor; border-radius:2px; opacity:.45; }
-  .stamp-red{ color:var(--red); background:var(--red-bg); transform:rotate(-3deg); }
-  .stamp-green{ color:var(--green); background:var(--green-bg); transform:rotate(2deg); }
-  .stamp-amber{ color:var(--amber); background:var(--amber-bg); transform:rotate(-2deg); }
+  .nav button:hover{ background:rgba(255,255,255,0.08); color:var(--sidebar-ink); }
+  .nav button.active{ background:rgba(255,255,255,0.16); color:#fff; font-weight:600; }
 
-  /* priority manifest strip */
-  .strip{ display:flex; gap:14px; overflow-x:auto; padding-bottom:6px; }
-  .ticket{
-    flex:0 0 190px; background:var(--card); border:1px dashed var(--line-strong); border-radius:6px 6px 0 0;
-    padding:14px 14px 4px; position:relative;
+  .side-block{ margin-bottom:18px; }
+  .side-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--sidebar-ink-soft); margin-bottom:8px; padding:0 4px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:6px; padding:0 4px; }
+  .chip{
+    all:unset; cursor:pointer; font-size:11.5px; padding:5px 10px; border-radius:14px; background:rgba(255,255,255,0.08);
+    color:var(--sidebar-ink-soft); border:1px solid rgba(255,255,255,0.12);
   }
-  .ticket .rank{ font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--ink-soft); line-height:1; }
-  .ticket .name{ font-weight:600; font-size:13.5px; margin:6px 0 8px; }
+  .chip.active{ background:#fff; color:var(--sidebar-a); font-weight:700; border-color:#fff; }
+  .search-box{ margin:0 4px; }
+  .search-box input{
+    width:100%; padding:8px 10px; border-radius:7px; border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.08); color:#fff; font-size:12.5px;
+  }
+  .search-box input::placeholder{ color:var(--sidebar-ink-soft); }
+
+  .sidebar-foot{ margin-top:auto; padding-top:14px; border-top:1px solid rgba(255,255,255,0.14); }
+  .theme-toggle{ display:flex; gap:6px; margin-bottom:10px; }
+  .theme-toggle button{
+    all:unset; cursor:pointer; flex:1; text-align:center; padding:7px 0; border-radius:7px; font-size:15px;
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+  }
+  .theme-toggle button.active{ background:#fff; }
+  .sync{ font-size:10.5px; color:var(--sidebar-ink-soft); }
+  .sync .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--sidebar-ink-soft); margin-right:5px; }
+  .sync .dot.live{ background:#41E0B8; }
+  .updated{ font-size:10px; color:var(--sidebar-ink-soft); margin-top:4px; }
+
+  /* ---------- Main ---------- */
+  main{ flex:1; min-width:0; padding:24px 30px 60px; }
+  .page-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
+  .page-head h1{ font-size:22px; margin:0; font-weight:800; }
+  .page-head .clock{ font-size:12px; color:var(--ink-soft); }
+  section{ margin-bottom:30px; }
+  .section-label{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:10px; flex-wrap:wrap; }
+  .section-label h2{ font-size:15px; font-weight:700; margin:0; }
+  .section-label .hint{ font-size:11.5px; color:var(--ink-soft); }
+  .info-btn{ all:unset; cursor:pointer; width:18px; height:18px; border-radius:50%; border:1.5px solid var(--line-strong); color:var(--ink-soft); font-size:11px; display:inline-flex; align-items:center; justify-content:center; }
+  .info-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* KPI strip */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .kpi-card .label{ font-size:11px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.03em; }
+  .kpi-card .value{ font-size:22px; font-weight:800; margin:4px 0 2px; }
+  .kpi-card .py{ font-size:10.5px; color:var(--ink-soft); }
+  .kpi-card .yoy{ font-size:11px; font-weight:700; }
+  .kpi-card .yoy.up{ color:var(--green); } .kpi-card .yoy.down{ color:var(--red); } .kpi-card .yoy.flat{ color:var(--ink-soft); }
+  .kpi-spark{ height:34px; margin-top:6px; }
+
+  /* priority manifest */
+  .strip{ display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; }
+  .ticket{ flex:0 0 190px; background:var(--card); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:10px; padding:14px; box-shadow:var(--shadow); cursor:pointer; }
+  .ticket .rank{ font-size:11px; font-weight:700; color:var(--ink-soft); }
+  .ticket .name{ font-weight:600; font-size:13.5px; margin:6px 0 8px; min-height:34px; }
   .ticket .days{ font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; }
-  .ticket .days-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;}
+  .ticket .days-label{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
+
+  /* two-col charts */
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .chart-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); }
+  .chart-card h3{ font-size:13.5px; margin:0 0 2px; font-weight:700; }
+  .chart-card .cap{ font-size:10.5px; color:var(--ink-soft); margin-bottom:10px; }
+  .donut-wrap, .bar-wrap{ height:230px; }
+  .bar-toolbar{ display:flex; justify-content:flex-end; gap:8px; margin-bottom:6px; }
+  .bar-toolbar button{ all:unset; cursor:pointer; font-size:11px; padding:3px 9px; border-radius:12px; border:1px solid var(--line-strong); color:var(--ink-soft); }
+  .bar-toolbar button.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
 
   /* bin grid */
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px; }
-  .tag{
-    background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; cursor:pointer;
-    box-shadow:var(--shadow); transition:transform .15s ease, border-color .15s ease;
-  }
-  .tag:hover{ transform:translateY(-2px); border-color:var(--line-strong); }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; }
+  .tag{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:15px; cursor:pointer; box-shadow:var(--shadow); transition:transform .15s ease, border-color .15s ease; }
+  .tag:hover{ transform:translateY(-2px); border-color:var(--accent); }
   .tag.active{ border-color:var(--accent); border-width:2px; }
-  .tag-hole{ width:14px; height:14px; border-radius:50%; background:var(--paper); border:2px solid var(--line-strong); margin:0 auto 10px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.25); }
-  .tag .bin-id{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); text-align:center; }
-  .tag .name{ font-weight:600; font-size:14.5px; text-align:center; margin:4px 0 10px; }
-  .tag .qty{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:700; text-align:center; }
-  .tag .qty-unit{ font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:4px; }
-  .tag .weight{ font-size:11px; color:var(--ink-soft); text-align:center; margin-bottom:10px; }
-  .tag .foot{ display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--line); padding-top:10px; }
+  .tag .dept-badge{ font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent-2); font-weight:700; margin-bottom:6px; }
+  .tag .bin-id{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft); }
+  .tag .name{ font-weight:600; font-size:14px; margin:4px 0 8px; }
+  .tag .qty{ font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; }
+  .tag .qty-unit{ font-size:11px; color:var(--ink-soft); margin-bottom:8px; }
+  .tag .foot{ display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--line); padding-top:9px; }
   .tag .eta{ font-family:'IBM Plex Mono',monospace; font-size:12px; }
-  .tag .fifo-flag{ margin-top:8px; font-size:10.5px; color:var(--red); text-align:center; font-weight:600; }
+  .stamp{ display:inline-block; font-weight:700; font-size:10px; letter-spacing:.04em; text-transform:uppercase; padding:3px 9px; border-radius:20px; }
+  .stamp-red{ color:var(--red); background:var(--red-bg); }
+  .stamp-green{ color:var(--green); background:var(--green-bg); }
+  .stamp-amber{ color:var(--amber); background:var(--amber-bg); }
+  .tag .fifo-flag{ margin-top:8px; font-size:10.5px; color:var(--red); font-weight:600; }
 
   /* detail panel */
-  .panel{ background:var(--card); border:1px solid var(--line); border-radius:8px; padding:20px 22px 14px; }
-  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; }
-  .panel-head h3{ font-family:'Bebas Neue',sans-serif; font-size:22px; margin:0; }
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px 16px; box-shadow:var(--shadow); }
+  .panel-head h3{ font-size:17px; margin:0; font-weight:800; }
   .panel-head .sub{ font-size:12px; color:var(--ink-soft); margin-top:3px; }
-  .reorder-note{ background:var(--card-alt); border:1px dashed var(--line-strong); border-radius:6px; padding:10px 14px; font-size:12.5px; margin:14px 0; }
+  .reorder-note{ background:var(--card-alt); border:1px solid var(--line); border-radius:8px; padding:11px 14px; font-size:12.5px; margin:14px 0; }
   .reorder-note b{ font-family:'IBM Plex Mono',monospace; }
-  .chart-wrap{ height:220px; background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:10px 6px 4px; margin-top:6px; }
+  .chart-wrap{ height:220px; background:var(--card-alt); border-radius:8px; padding:10px 6px 4px; margin-top:6px; }
   .legend-row{ display:flex; gap:18px; margin-top:8px; padding-top:10px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-soft); }
   .legend-row span{ display:flex; align-items:center; gap:6px; }
   .sw{ width:14px; height:2px; display:inline-block; }
   .sw-ink{ background:var(--ink); }
   .sw-amber{ background:var(--amber); border-top:2px dashed var(--amber); }
 
+  /* product table */
+  .table-toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .table-toolbar select, .table-toolbar input{ padding:7px 10px; border-radius:7px; border:1px solid var(--line-strong); background:var(--card); color:var(--ink); font-size:12.5px; }
+  .table-wrap{ max-height:280px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; }
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead th{ position:sticky; top:0; background:var(--card-alt); text-align:left; padding:10px 14px; font-weight:700; color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:.03em; }
+  tbody td{ padding:9px 14px; border-top:1px solid var(--line); }
+  tbody tr:hover{ background:var(--card-alt); }
+  .badge-dept{ font-size:10px; padding:2px 8px; border-radius:10px; background:var(--card-alt); color:var(--accent-2); font-weight:700; }
+
+  /* cross-dept availability */
+  .xdept-list{ display:flex; flex-direction:column; gap:10px; }
+  .xdept-row{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 16px; box-shadow:var(--shadow); }
+  .xdept-row .top{ display:flex; justify-content:space-between; font-weight:600; font-size:13px; }
+  .xdept-row .depts{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .dept-pill{ font-size:11px; padding:5px 10px; border-radius:8px; background:var(--card-alt); }
+  .dept-pill.short{ color:var(--red); background:var(--red-bg); font-weight:700; }
+  .dept-pill.surplus{ color:var(--green); background:var(--green-bg); font-weight:700; }
+
   /* shipments */
-  .dropzone{
-    border:2px dashed var(--line-strong); border-radius:8px; padding:26px; text-align:center;
-    background:var(--card); cursor:pointer; margin-bottom:18px;
-  }
+  .dropzone{ border:2px dashed var(--line-strong); border-radius:10px; padding:24px; text-align:center; background:var(--card); cursor:pointer; margin-bottom:14px; }
   .dropzone:hover{ border-color:var(--accent); }
-  .dropzone .label{ font-weight:600; font-size:14px; }
-  .dropzone .sub{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .dropzone .label{ font-weight:700; font-size:14px; }
+  .dropzone .sub{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
   .dropzone input{ display:none; }
   .parse-status{ font-size:12.5px; color:var(--ink-soft); margin-bottom:14px; min-height:16px; }
+  .track-search{ display:flex; gap:8px; margin-bottom:14px; }
+  .track-search input{ flex:1; padding:9px 12px; border-radius:8px; border:1px solid var(--line-strong); background:var(--card); color:var(--ink); font-size:12.5px; }
+  .track-search button{ all:unset; cursor:pointer; padding:9px 16px; border-radius:8px; background:var(--accent); color:var(--accent-ink); font-weight:700; font-size:12.5px; }
 
   .ship-list{ display:flex; flex-direction:column; gap:12px; }
-  .ship-card{ background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .ship-card{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; box-shadow:var(--shadow); }
+  .ship-card.dimmed{ opacity:.35; }
   .ship-top{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; align-items:baseline; }
-  .ship-top .who{ font-weight:600; }
+  .ship-top .who{ font-weight:700; }
   .ship-top .track{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
   .timeline{ display:flex; gap:0; margin-top:12px; }
   .tl-stage{ flex:1; text-align:center; position:relative; font-size:10px; color:var(--ink-soft); }
@@ -165,129 +206,263 @@
 
   /* scorecard */
   .score-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .score-card{ background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 18px; }
-  .score-card h4{ font-family:'Bebas Neue',sans-serif; font-size:16px; margin:0 0 10px; letter-spacing:.04em; }
-  .score-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13px; }
+  .score-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; box-shadow:var(--shadow); }
+  .score-card h4{ font-size:13.5px; margin:0 0 10px; font-weight:700; }
+  .score-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:12.5px; }
   .score-row:last-child{ border-bottom:none; }
-  .score-row .metrics{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); }
-  .best-pick{ font-size:11px; color:var(--green); font-weight:700; margin-left:6px; }
+  .score-row .metrics{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); }
+  .best-pick{ font-size:10.5px; color:var(--green); font-weight:700; margin-left:6px; }
 
   /* fifo */
   .fifo-list{ display:flex; flex-direction:column; gap:10px; }
-  .fifo-row{ display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px 14px; font-size:13px; }
-  .fifo-row.ok{ opacity:.7; }
-  .fifo-empty{ font-size:13px; color:var(--ink-soft); padding:10px 0; }
+  .fifo-row{ display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 14px; font-size:12.5px; box-shadow:var(--shadow); }
+  .fifo-row.ok{ opacity:.65; }
+  .fifo-empty{ font-size:12.5px; color:var(--ink-soft); padding:10px 0; }
 
-  footer{ max-width:1180px; margin:0 auto; padding:0 32px 50px; font-size:12px; color:var(--ink-soft); line-height:1.6; }
+  /* department usage placeholder */
+  .placeholder-card{ background:repeating-linear-gradient(135deg,var(--card-alt),var(--card-alt) 10px,var(--card) 10px,var(--card) 20px); border:1.5px dashed var(--line-strong); border-radius:12px; padding:28px; text-align:center; color:var(--ink-soft); }
+  .placeholder-card .big{ font-size:13.5px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+  .placeholder-card .small{ font-size:11.5px; }
+
+  /* modal */
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .modal-backdrop.open{ display:flex; }
+  .modal{ background:var(--card); border-radius:12px; max-width:640px; width:100%; max-height:80vh; overflow-y:auto; padding:22px 24px; box-shadow:var(--shadow); }
+  .modal h3{ margin:0 0 4px; font-size:16px; }
+  .modal .close{ all:unset; cursor:pointer; float:right; font-size:18px; color:var(--ink-soft); }
+
+  footer{ padding:20px 30px 50px; font-size:11.5px; color:var(--ink-soft); line-height:1.6; max-width:900px; }
   footer strong{ color:var(--ink); }
 
-  @media (max-width:640px){
-    header{padding:16px 18px 12px;} main{padding:20px 18px 40px;}
-    .score-grid{grid-template-columns:1fr;}
-    .head-row{flex-direction:column; gap:12px;}
-    .head-right{text-align:left;}
+  @media (max-width:900px){
+    .app{ flex-direction:column; }
+    .sidebar{ width:100%; flex:none; position:relative; height:auto; flex-direction:row; flex-wrap:wrap; }
+    .two-col, .score-grid{ grid-template-columns:1fr; }
+    main{ padding:18px 16px 40px; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="head-row">
-    <div class="brand">
-      <h1>Store Board</h1>
-      <p>Predictive Parts Manifest — SMD &amp; Mechanical Bins</p>
+<div class="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="mark">AI</div>
+      <div>
+        <div class="name">AIPMS</div>
+        <div class="sub">AIoT Inventory Mgmt</div>
+      </div>
     </div>
-    <div class="head-right">
-      <div class="shift-toggle" role="group" aria-label="Display mode">
-        <button id="btn-day" class="active" onclick="setShift('day')">Day Shift</button>
-        <button id="btn-night" onclick="setShift('night')">Night Shift</button>
+
+    <nav class="nav" id="nav">
+      <button data-target="top" class="active">🏠 Home</button>
+      <button data-target="overview-anchor">📊 Inventory Overview</button>
+      <button data-target="product-search-section">🔍 Product Search</button>
+    </nav>
+
+    <div class="side-block">
+      <div class="side-label">Year</div>
+      <div class="chip-row" id="year-chips">
+        <button class="chip active" data-year="2026">2026</button>
+        <button class="chip" data-year="2025">2025</button>
+      </div>
+    </div>
+
+    <div class="side-block">
+      <div class="side-label">Stock Movement</div>
+      <div class="chip-row" id="movement-chips">
+        <button class="chip active" data-move="all">All</button>
+        <button class="chip" data-move="slow">Slow</button>
+        <button class="chip" data-move="moderate">Moderate</button>
+        <button class="chip" data-move="fast">Fast</button>
+      </div>
+    </div>
+
+    <div class="side-block search-box">
+      <div class="side-label">Quick Search</div>
+      <input type="text" id="sidebar-search" placeholder="SKU, part name…" onkeydown="if(event.key==='Enter') runSidebarSearch()">
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="theme-toggle">
+        <button id="btn-light" class="active" onclick="setTheme('light')" title="Light mode">☀️</button>
+        <button id="btn-dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
       </div>
       <div class="sync"><span class="dot" id="sync-dot"></span><span id="source-label">Demo data</span></div>
-      <div class="clock" id="clock">—</div>
+      <div class="updated">Last updated: <span id="clock">—</span></div>
     </div>
-  </div>
-</header>
-<div class="zigzag"></div>
+  </aside>
 
-<main>
-
-  <section>
-    <div class="section-label">
-      <h2>Priority Manifest — Runs Out First</h2>
-      <span class="hint">Ranked soonest-to-empty, predicted from live weight trend</span>
+  <!-- ================= MAIN ================= -->
+  <main id="top">
+    <div class="page-head">
+      <h1>Inventory Overview</h1>
+      <span class="clock" id="year-label">Viewing FY2026</span>
     </div>
-    <div class="strip" id="strip"></div>
-  </section>
 
-  <section>
-    <div class="section-label">
-      <h2>Bins</h2>
-      <span class="hint">Tap a bin for its forecast and reorder timing</span>
-    </div>
-    <div class="grid" id="grid"></div>
-  </section>
+    <!-- KPI STRIP -->
+    <section>
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </section>
 
-  <section>
-    <div class="panel">
-      <div class="panel-head">
-        <div>
-          <h3 id="panel-name">—</h3>
-          <div class="sub" id="panel-sub">—</div>
+    <a id="overview-anchor"></a>
+    <!-- PRIORITY MANIFEST -->
+    <section>
+      <div class="section-label">
+        <h2>Priority Manifest — Runs Out First</h2>
+        <span class="hint">Ranked soonest-to-empty, predicted from live weight/quantity trend</span>
+      </div>
+      <div class="strip" id="strip"></div>
+    </section>
+
+    <!-- DEPARTMENT + CATEGORY CHARTS -->
+    <section>
+      <div class="two-col">
+        <div class="chart-card">
+          <div class="section-label" style="margin-bottom:0;">
+            <div><h3 style="display:inline">Total Stock Quantity by Department</h3></div>
+            <button class="info-btn" onclick="openModal('dept')">?</button>
+          </div>
+          <div class="cap">Drilldown: Department › Products</div>
+          <div class="donut-wrap"><canvas id="dept-donut"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="section-label" style="margin-bottom:0;">
+            <div><h3 style="display:inline">Total Stock Quantity by Category</h3></div>
+            <button class="info-btn" onclick="openModal('category')">?</button>
+          </div>
+          <div class="cap">Drilldown: Category › Products</div>
+          <div class="bar-toolbar">
+            <button id="bar-top" class="active" onclick="setBarZoom('top')">Top 6</button>
+            <button id="bar-all" onclick="setBarZoom('all')">All categories</button>
+          </div>
+          <div class="bar-wrap"><canvas id="category-bar"></canvas></div>
         </div>
       </div>
-      <div class="reorder-note" id="reorder-note">—</div>
-      <div class="chart-wrap"><canvas id="chart"></canvas></div>
-      <div class="legend-row">
-        <span><span class="sw sw-ink"></span>Observed weight</span>
-        <span><span class="sw sw-amber"></span>Forecast to empty</span>
+    </section>
+
+    <!-- PRODUCT SEARCH TABLE -->
+    <a id="product-search-section"></a>
+    <section>
+      <div class="section-label">
+        <h2>Product Search</h2>
+        <span class="hint">Filter by category, scroll for full list</span>
       </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="section-label">
-      <h2>Shipments &amp; Invoices</h2>
-      <span class="hint">Upload an invoice — Claude reads it and logs the shipment</span>
-    </div>
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('invoice-input').click()">
-      <div class="label">Clip an invoice to the board</div>
-      <div class="sub">Image or PDF of a supplier invoice or courier slip</div>
-      <input type="file" id="invoice-input" accept="image/*,.pdf" onchange="handleInvoiceUpload(event)">
-    </div>
-    <div class="parse-status" id="parse-status"></div>
-    <div class="ship-list" id="ship-list"></div>
-  </section>
-
-  <section>
-    <div class="section-label">
-      <h2>Supplier &amp; Courier Scorecard</h2>
-      <span class="hint">From delivered shipment history</span>
-    </div>
-    <div class="score-grid">
-      <div class="score-card">
-        <h4>Suppliers</h4>
-        <div id="supplier-score"></div>
+      <div class="table-toolbar">
+        <select id="category-filter" onchange="renderProductTable()">
+          <option value="all">All categories</option>
+        </select>
+        <input type="text" id="table-search" placeholder="Search product or SKU…" oninput="renderProductTable()">
       </div>
-      <div class="score-card">
-        <h4>Couriers</h4>
-        <div id="courier-score"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Department</th><th>Qty</th><th>Days left</th></tr></thead>
+          <tbody id="product-table-body"></tbody>
+        </table>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section>
-    <div class="section-label">
-      <h2>Stock Rotation Log</h2>
-      <span class="hint">First-scanned batch per bin — flags stock sitting unused while a newer batch is already open</span>
-    </div>
-    <div class="fifo-list" id="fifo-list"></div>
-  </section>
+    <!-- BIN GRID + FORECAST -->
+    <section>
+      <div class="section-label">
+        <h2>Bins</h2>
+        <span class="hint">Tap a bin for its forecast and reorder timing</span>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
 
-</main>
+    <section>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3 id="panel-name">—</h3>
+            <div class="sub" id="panel-sub">—</div>
+          </div>
+        </div>
+        <div class="reorder-note" id="reorder-note">—</div>
+        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+        <div class="legend-row">
+          <span><span class="sw sw-ink"></span>Observed quantity</span>
+          <span><span class="sw sw-amber"></span>Forecast to empty</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CROSS-DEPARTMENT AVAILABILITY -->
+    <section>
+      <div class="section-label">
+        <h2>Cross-Department Availability</h2>
+        <span class="hint">Where the same part sits across departments — surplus elsewhere can cover a shortage now</span>
+      </div>
+      <div class="xdept-list" id="xdept-list"></div>
+    </section>
+
+    <!-- DEPARTMENT USAGE PLACEHOLDER -->
+    <section>
+      <div class="section-label">
+        <h2>Department-wise Consumption</h2>
+        <span class="hint">Reserved for future release</span>
+      </div>
+      <div class="placeholder-card">
+        <div class="big">Department usage classification — coming soon</div>
+        <div class="small">This panel is reserved for breaking down consumption by department (SMD Assembly, Mechanical Stores, Packaging Bay, QC Lab) once per-department scan data is wired in.</div>
+      </div>
+    </section>
+
+    <!-- SHIPMENTS & INVOICES -->
+    <section>
+      <div class="section-label">
+        <h2>Shipments &amp; Invoices</h2>
+        <span class="hint">Upload an invoice — Claude reads it and logs the shipment</span>
+      </div>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('invoice-input').click()">
+        <div class="label">Drop or click to upload an invoice</div>
+        <div class="sub">PDF, JPG, JPEG or PNG — supplier invoice or courier slip</div>
+        <input type="file" id="invoice-input" accept="image/png,image/jpeg,image/jpg,.pdf" onchange="handleInvoiceUpload(event)">
+      </div>
+      <div class="parse-status" id="parse-status"></div>
+      <div class="track-search">
+        <input type="text" id="tracking-search" placeholder="Track a shipment by tracking number…">
+        <button onclick="runTrackingSearch()">Track</button>
+      </div>
+      <div class="ship-list" id="ship-list"></div>
+    </section>
+
+    <!-- SCORECARD -->
+    <section>
+      <div class="section-label">
+        <h2>Supplier &amp; Courier Scorecard</h2>
+        <span class="hint">From delivered shipment history — best on-time / fastest average highlighted</span>
+      </div>
+      <div class="score-grid">
+        <div class="score-card"><h4>Suppliers</h4><div id="supplier-score"></div></div>
+        <div class="score-card"><h4>Couriers</h4><div id="courier-score"></div></div>
+      </div>
+    </section>
+
+    <!-- FIFO -->
+    <section>
+      <div class="section-label">
+        <h2>Stock Rotation Log</h2>
+        <span class="hint">First-scanned batch per bin — flags stock sitting unused while a newer batch is already open</span>
+      </div>
+      <div class="fifo-list" id="fifo-list"></div>
+    </section>
+  </main>
+</div>
 
 <footer>
-  <strong>Note:</strong> bin weight/quantity figures are simulated until the gateway (board → cloud) is wired up — same Firebase feed the sensors will write to. Courier tracking stages are estimated from each courier's historical average lead time; connecting a real courier API would replace the estimate with live scans. Invoice reading calls Claude directly from this page — that works right here in Claude, but a deployed copy of this board would need its own Anthropic API key, ideally called from a small backend rather than the browser.
+  <strong>Note:</strong> quantity figures are simulated demo data until the AIoT gateway (board → cloud) is wired to the same Firebase feed the sensors will write to. Courier tracking stages are estimated from each courier's historical average lead time and a tracking-number prefix guess — connecting a real courier API would replace the estimate with live scans. Invoice reading calls Claude directly from this page, which works inside Claude.ai; once you host this file on your own domain, route that call through your own small backend holding an Anthropic API key rather than calling it from the browser.
 </footer>
+
+<div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <button class="close" onclick="closeModal()">✕</button>
+    <h3 id="modal-title">—</h3>
+    <div id="modal-body"></div>
+  </div>
+</div>
 
 <script>
 // ================= CONFIG =================
@@ -301,31 +476,44 @@ const CONFIG = {
 };
 // ============================================
 
-let currentShift = 'day'; // in-memory only — no localStorage in this environment
+let currentTheme = 'light';
+let currentYear = '2026';
+let currentMovement = 'all';
+let barZoom = 'top';
+
+const COURIER_PREFIX = { DL:'Delhivery', BD:'Blue Dart', DT:'DTDC', FX:'FedEx', ST:'Shadowfax', IN:'India Post' };
 
 const demoBins = [
-  { id:'BIN-R10K-08', name:'10kΩ Resistor · 0805', qty:8400, unit:'pcs', weight:340, rate:300, supplier:'Salasar Electronics',
+  { id:'BIN-R10K-08', name:'10kΩ Resistor · 0805', category:'Resistors', department:'SMD Assembly', qty:8400, unit:'pcs', rate:300, supplier:'Salasar Electronics', price:0.4,
     batches:[ {id:'B-3301', firstScanned:'2026-07-20', initial:8400, remaining:8400} ] },
-  { id:'BIN-C100N-06', name:'100nF Ceramic Cap · 0603', qty:1200, unit:'pcs', weight:28, rate:260, supplier:'Salasar Electronics',
-    batches:[
-      {id:'B-2201', firstScanned:'2026-07-30', initial:500, remaining:400},
-      {id:'B-2214', firstScanned:'2026-08-14', initial:1200, remaining:800}
-    ] },
-  { id:'BIN-CONUSBC16', name:'USB-C Connector · 16-pin', qty:340, unit:'pcs', weight:612, rate:40, supplier:'Deepak Trading Co',
+  { id:'BIN-R10K-ALT', name:'10kΩ Resistor · 0805 (reserve reel)', category:'Resistors', department:'Packaging Bay', qty:3000, unit:'pcs', rate:20, supplier:'Salasar Electronics', price:0.4,
+    batches:[ {id:'B-3320', firstScanned:'2026-06-11', initial:3000, remaining:3000} ] },
+  { id:'BIN-C100N-06', name:'100nF Ceramic Cap · 0603', category:'Capacitors', department:'SMD Assembly', qty:1200, unit:'pcs', rate:260, supplier:'Salasar Electronics', price:0.6,
+    batches:[ {id:'B-2201', firstScanned:'2026-07-30', initial:500, remaining:400}, {id:'B-2214', firstScanned:'2026-08-14', initial:1200, remaining:800} ] },
+  { id:'BIN-CONUSBC16', name:'USB-C Connector · 16-pin', category:'Connectors', department:'Mechanical Stores', qty:340, unit:'pcs', rate:40, supplier:'Deepak Trading Co', price:18,
     batches:[ {id:'B-4110', firstScanned:'2026-08-05', initial:400, remaining:340} ] },
-  { id:'BIN-IC-M328P', name:'ATmega328P · TQFP', qty:900, unit:'pcs', weight:810, rate:15, supplier:'Salasar Electronics',
+  { id:'BIN-CONUSBC16-B', name:'USB-C Connector · 16-pin (spare)', category:'Connectors', department:'Packaging Bay', qty:500, unit:'pcs', rate:5, supplier:'Deepak Trading Co', price:18,
+    batches:[ {id:'B-4130', firstScanned:'2026-05-22', initial:500, remaining:500} ] },
+  { id:'BIN-IC-M328P', name:'ATmega328P · TQFP', category:'ICs', department:'SMD Assembly', qty:900, unit:'pcs', rate:15, supplier:'Salasar Electronics', price:145,
     batches:[ {id:'B-5502', firstScanned:'2026-07-01', initial:1000, remaining:900} ] },
-  { id:'BIN-LED-R06', name:'Red LED · 0603', qty:5200, unit:'pcs', weight:31, rate:500, supplier:'Deepak Trading Co',
-    batches:[ {id:'B-6001', firstScanned:'2026-08-10', initial:5200, remaining:5200} ] },
+  { id:'BIN-LED-R06', name:'Red LED · 0603', category:'LEDs', department:'SMD Assembly', qty:2600, unit:'pcs', rate:210, supplier:'Deepak Trading Co', price:0.5,
+    batches:[ {id:'B-6010', firstScanned:'2026-07-25', initial:3000, remaining:2600} ] },
+  { id:'BIN-M3X10-SS', name:'M3x10 SS Screw', category:'Fasteners', department:'Mechanical Stores', qty:12000, unit:'pcs', rate:150, supplier:'Deepak Trading Co', price:0.9,
+    batches:[ {id:'B-7101', firstScanned:'2026-06-30', initial:12000, remaining:12000} ] },
+  { id:'BIN-PCB-REV4', name:'Custom PCB · Rev4', category:'PCBs', department:'QC Lab', qty:60, unit:'pcs', rate:25, supplier:'LocalFab Circuits', price:210,
+    batches:[ {id:'B-8801', firstScanned:'2026-08-10', initial:100, remaining:60} ] },
+  { id:'BIN-CBL-JST2', name:'JST 2-pin Cable · 150mm', category:'Cables', department:'Packaging Bay', qty:2200, unit:'pcs', rate:90, supplier:'Deepak Trading Co', price:3.2,
+    batches:[ {id:'B-9001', firstScanned:'2026-07-05', initial:2500, remaining:2200} ] },
 ];
 
 const demoShipments = [
-  { id:'S1', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-07-01', delivered:'2026-07-05', promisedDays:4, item:'10kΩ Resistor reel', qty:5000, tracking:'DL394821', binId:'BIN-R10K-08' },
+  { id:'S1', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-06-01', delivered:'2026-06-06', promisedDays:5, item:'10kΩ Resistor reel', qty:5000, tracking:'DL388055', binId:'BIN-R10K-08' },
   { id:'S2', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-06-10', delivered:'2026-06-16', promisedDays:4, item:'ATmega328P TQFP tray', qty:500, tracking:'DL388120', binId:'BIN-IC-M328P' },
   { id:'S3', supplier:'Deepak Trading Co', courier:'DTDC', ordered:'2026-07-10', delivered:'2026-07-16', promisedDays:6, item:'USB-C Connector box', qty:400, tracking:'DT552091', binId:'BIN-CONUSBC16' },
-  { id:'S4', supplier:'Deepak Trading Co', courier:'Blue Dart', ordered:'2026-06-20', delivered:'2026-06-23', promisedDays:4, item:'Red LED reel', qty:5000, tracking:'BD119284', binId:'BIN-LED-R06' },
+  { id:'S4', supplier:'Deepak Trading Co', courier:'Blue Dart', ordered:'2026-06-20', delivered:'2026-06-23', promisedDays:4, item:'Red LED reel', qty:3000, tracking:'BD119284', binId:'BIN-LED-R06' },
   { id:'S5', supplier:'Salasar Electronics', courier:'Blue Dart', ordered:'2026-07-15', delivered:'2026-07-18', promisedDays:4, item:'10kΩ Resistor reel', qty:5000, tracking:'BD119302', binId:'BIN-R10K-08' },
   { id:'S6', supplier:'Salasar Electronics', courier:'Delhivery', ordered:'2026-08-17', delivered:null, promisedDays:4, item:'100nF Ceramic Cap reel', qty:4000, tracking:'DL401177', binId:'BIN-C100N-06' },
+  { id:'S7', supplier:'LocalFab Circuits', courier:'India Post', ordered:'2026-08-12', delivered:null, promisedDays:7, item:'Custom PCB Rev4 batch', qty:100, tracking:'IN220481', binId:'BIN-PCB-REV4' },
 ];
 
 let bins = demoBins;
@@ -334,11 +522,19 @@ let dataSourceLabel = 'Demo data (Firebase not connected)';
 
 function computeStatus(days){ if(days<5) return 'crit'; if(days<14) return 'warn'; return 'ok'; }
 const statusStamp = { ok:['stamp-green','OK'], warn:['stamp-amber','Reorder soon'], crit:['stamp-red','Critical'] };
+function movementClass(days){ if(days<10) return 'fast'; if(days<=30) return 'moderate'; return 'slow'; }
 
-function annotate(list){ list.forEach(b=>{ b.days = +(b.qty/b.rate).toFixed(1); b.status = computeStatus(b.days); }); return list; }
+function annotate(list){
+  list.forEach(b=>{ b.days = +(b.qty/b.rate).toFixed(1); b.status = computeStatus(b.days); b.movement = movementClass(b.days); });
+  return list;
+}
 annotate(bins);
 
-// ---- supplier / courier stats from delivered shipments ----
+function visibleBins(){
+  return bins.filter(b => currentMovement==='all' || b.movement===currentMovement);
+}
+
+// ---- supplier / courier stats ----
 function statsFor(field, name){
   const rel = shipments.filter(s => s[field]===name && s.delivered);
   if(!rel.length) return {avgLeadDays:null, onTimePct:null, count:0};
@@ -354,19 +550,22 @@ function renderScorecards(){
   const couriers = uniqueValues('courier').map(n => ({name:n, ...statsFor('courier', n)}));
   const bestSupplier = [...suppliers].sort((a,b)=> (b.onTimePct||0)-(a.onTimePct||0) || (a.avgLeadDays||99)-(b.avgLeadDays||99))[0];
   const bestCourier = [...couriers].sort((a,b)=> (b.onTimePct||0)-(a.onTimePct||0) || (a.avgLeadDays||99)-(b.avgLeadDays||99))[0];
-
   const rowsHtml = (list, best) => list.map(s => `
     <div class="score-row">
       <span>${s.name}${best && s.name===best.name ? '<span class="best-pick">★ best</span>' : ''}</span>
       <span class="metrics">${s.avgLeadDays ?? '—'}d avg · ${s.onTimePct ?? '—'}% on-time · ${s.count} shipments</span>
     </div>`).join('');
-
   document.getElementById('supplier-score').innerHTML = rowsHtml(suppliers, bestSupplier);
   document.getElementById('courier-score').innerHTML = rowsHtml(couriers, bestCourier);
 }
 
 // ---- simulated courier tracking timeline ----
 const STAGES = ['Booked','Picked up','In transit','Out for delivery','Delivered'];
+function guessCourierFromTracking(tn){
+  if(!tn) return null;
+  const prefix = tn.slice(0,2).toUpperCase();
+  return COURIER_PREFIX[prefix] || null;
+}
 function trackingTimeline(shipment){
   const lead = statsFor('courier', shipment.courier).avgLeadDays || shipment.promisedDays || 5;
   const start = new Date(shipment.ordered);
@@ -379,13 +578,15 @@ function trackingTimeline(shipment){
 }
 function fmtDate(d){ return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}); }
 
-function renderShipments(){
+function renderShipments(filterText){
   const sorted = [...shipments].sort((a,b)=> new Date(b.ordered)-new Date(a.ordered));
+  const q = (filterText||'').trim().toLowerCase();
   document.getElementById('ship-list').innerHTML = sorted.map(s=>{
     const tl = trackingTimeline(s);
     const lastReachedIdx = tl.reduce((acc,st,i)=> st.reached ? i : acc, 0);
+    const matches = !q || s.tracking.toLowerCase().includes(q) || s.item.toLowerCase().includes(q) || s.supplier.toLowerCase().includes(q);
     return `
-    <div class="ship-card">
+    <div class="ship-card ${q && !matches ? 'dimmed' : ''}">
       <div class="ship-top">
         <span class="who">${s.item} — ${s.qty} units</span>
         <span class="track">${s.courier} · ${s.tracking}</span>
@@ -397,17 +598,16 @@ function renderShipments(){
       <div class="timeline">
         ${tl.map((st,i)=>`
           <div class="tl-stage ${st.reached?'reached':''} ${i===lastReachedIdx && !s.delivered ? 'current':''}">
-            <div class="bar"></div>
-            <div>${st.stage}</div>
-            <div class="tl-date">${fmtDate(st.date)}</div>
+            <div class="bar"></div><div>${st.stage}</div><div class="tl-date">${fmtDate(st.date)}</div>
           </div>`).join('')}
       </div>
       <div class="sim-note">Estimated from ${s.courier}'s historical average lead time — connect a live courier API to replace with real scans.</div>
     </div>`;
   }).join('');
 }
+function runTrackingSearch(){ renderShipments(document.getElementById('tracking-search').value); }
 
-// ---- FIFO / stale stock check ----
+// ---- FIFO ----
 function fifoViolations(){
   const flags = [];
   bins.forEach(b=>{
@@ -432,12 +632,12 @@ function renderFifo(){
     </div>`).join('');
 }
 
-// ---- priority manifest strip ----
+// ---- priority manifest ----
 function renderStrip(){
-  const ranked = [...bins].sort((a,b)=> a.days-b.days);
+  const ranked = [...visibleBins()].sort((a,b)=> a.days-b.days).slice(0,8);
   document.getElementById('strip').innerHTML = ranked.map((b,i)=>`
-    <div class="ticket zigzag-bottom" data-id="${b.id}" onclick="selectBin('${b.id}')">
-      <div class="rank">#${i+1}</div>
+    <div class="ticket" data-id="${b.id}" onclick="selectBin('${b.id}')">
+      <div class="rank">#${i+1} · ${b.department}</div>
       <div class="name">${b.name}</div>
       <div class="days">${b.days}</div>
       <div class="days-label">days left</div>
@@ -447,17 +647,17 @@ function renderStrip(){
 // ---- bin grid ----
 function renderGrid(){
   const flags = fifoViolations();
-  document.getElementById('grid').innerHTML = bins.map(b=>{
+  const list = visibleBins();
+  document.getElementById('grid').innerHTML = list.map(b=>{
     const [cls,label] = statusStamp[b.status];
     const flagged = flags.find(f=>f.binId===b.id);
     return `
     <div class="tag" data-id="${b.id}" onclick="selectBin('${b.id}')">
-      <div class="tag-hole"></div>
+      <div class="dept-badge">${b.department}</div>
       <div class="bin-id">${b.id}</div>
       <div class="name">${b.name}</div>
       <div class="qty">${b.qty.toLocaleString()}</div>
-      <div class="qty-unit">${b.unit}</div>
-      <div class="weight">${b.weight} g on load cell · ${b.supplier}</div>
+      <div class="qty-unit">${b.unit} · ${b.supplier}</div>
       <div class="foot">
         <span class="eta">${b.days}d left</span>
         <span class="stamp ${cls}">${label}</span>
@@ -471,12 +671,12 @@ function renderGrid(){
 let chart;
 function buildSeries(b){
   const days=14, labels=[], observed=[], forecast=[];
-  const dailyLoss = b.weight * (b.rate / b.qty);
-  let w = b.weight + dailyLoss*days;
+  const dailyLoss = b.rate;
+  let w = b.qty + dailyLoss*days;
   for(let i=-days;i<=0;i++){
     labels.push(i===0?'Today':i+'d');
     w -= dailyLoss * (1 + (Math.random()-0.5)*0.15);
-    observed.push(Math.max(w,0).toFixed(1));
+    observed.push(Math.max(w,0).toFixed(0));
     forecast.push(null);
   }
   let fw = parseFloat(observed[observed.length-1]);
@@ -485,7 +685,7 @@ function buildSeries(b){
   for(let i=1;i<=Math.min(daysToZero,14);i++){
     labels.push('+'+i+'d');
     fw = Math.max(fw-dailyLoss,0);
-    forecast.push(fw.toFixed(1));
+    forecast.push(fw.toFixed(0));
     observed.push(null);
   }
   return {labels, observed, forecast};
@@ -494,9 +694,10 @@ function cssVar(name){ return getComputedStyle(document.documentElement).getProp
 
 function selectBin(id){
   const b = bins.find(x=>x.id===id);
+  if(!b) return;
   document.querySelectorAll('.tag').forEach(c=>c.classList.toggle('active', c.dataset.id===id));
   document.getElementById('panel-name').textContent = b.name;
-  document.getElementById('panel-sub').textContent = `${b.id} · burn rate ≈ ${b.rate} ${b.unit}/day · supplier: ${b.supplier}`;
+  document.getElementById('panel-sub').textContent = `${b.id} · ${b.department} · burn rate ≈ ${b.rate} ${b.unit}/day · supplier: ${b.supplier}`;
 
   const lead = statsFor('supplier', b.supplier).avgLeadDays;
   const note = document.getElementById('reorder-note');
@@ -519,11 +720,174 @@ function selectBin(id){
     options:{ responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{ backgroundColor:cssVar('--card'), borderColor:cssVar('--line'), borderWidth:1, titleColor:cssVar('--ink'), bodyColor:cssVar('--ink') } },
       scales:{
-        y:{ title:{display:true,text:'grams',color:cssVar('--ink-soft'),font:{size:11}}, grid:{color:cssVar('--line')}, ticks:{color:cssVar('--ink-soft')} },
+        y:{ title:{display:true,text:b.unit,color:cssVar('--ink-soft'),font:{size:11}}, grid:{color:cssVar('--line')}, ticks:{color:cssVar('--ink-soft')} },
         x:{ grid:{display:false}, ticks:{color:cssVar('--ink-soft')} }
       }}
   });
 }
+
+// ---- KPI strip ----
+let kpiCharts = [];
+function sparkline(canvasId, data, color){
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const c = new Chart(ctx, {
+    type:'line',
+    data:{ labels:data.map((_,i)=>i), datasets:[{ data, borderColor:color, borderWidth:2, pointRadius:0, tension:0.35, fill:false }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{ x:{display:false}, y:{display:false} } }
+  });
+  kpiCharts.push(c);
+}
+function randSeries(base, n=10, vol=0.08){
+  const out=[]; let v=base;
+  for(let i=0;i<n;i++){ v = v*(1+(Math.random()-0.5)*vol); out.push(v); }
+  return out;
+}
+function renderKPIs(){
+  kpiCharts.forEach(c=>c.destroy()); kpiCharts=[];
+  const list = visibleBins();
+  const totalQty = list.reduce((a,b)=>a+b.qty,0);
+  const totalValue = list.reduce((a,b)=>a+b.qty*b.price,0);
+  const avgLead = (()=>{ const leads = shipments.filter(s=>s.delivered).map(s=>(new Date(s.delivered)-new Date(s.ordered))/86400000); return leads.length? +(leads.reduce((a,b)=>a+b,0)/leads.length).toFixed(1) : 0; })();
+  const belowReorderPct = +((list.filter(b=>b.status!=='ok').length/(list.length||1))*100).toFixed(1);
+  const stockOutPct = +((list.filter(b=>b.qty===0).length/(list.length||1))*100).toFixed(1);
+  const yearMult = currentYear==='2025' ? 0.91 : 1;
+
+  const kpis = [
+    { label:'Total Stock Qty', value:Math.round(totalQty*yearMult).toLocaleString(), py:'PY: '+Math.round(totalQty*0.85).toLocaleString(), yoy:'+'+((yearMult-0.85)*100/0.85).toFixed(1)+'%', dir:'up', color:cssVar('--accent') },
+    { label:'Total Stock Value', value:'₹'+(totalValue*yearMult/100000).toFixed(2)+'L', py:'PY: ₹'+(totalValue*0.8/100000).toFixed(2)+'L', yoy:'+'+(((yearMult-0.8)*100)/0.8).toFixed(1)+'%', dir:'up', color:cssVar('--accent-2') },
+    { label:'Avg Lead Time', value:avgLead+'d', py:'PY: '+(avgLead+1)+'d', yoy:'-'+(100/(avgLead+1)).toFixed(1)+'%', dir:'down-good', color:cssVar('--amber') },
+    { label:'Stock-Out Rate', value:stockOutPct+'%', py:'PY: '+(stockOutPct+2.1)+'%', yoy:'-2.1%', dir:'down-good', color:cssVar('--red') },
+    { label:'Below Reorder %', value:belowReorderPct+'%', py:'PY: '+(belowReorderPct+2.5)+'%', yoy:'-2.5%', dir:'down-good', color:cssVar('--green') },
+  ];
+  const dirClass = d => d==='up' ? 'up' : (d==='down-good' ? 'up' : 'down');
+  document.getElementById('kpi-grid').innerHTML = kpis.map((k,i)=>`
+    <div class="kpi-card">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.value}</div>
+      <div class="py">${k.py} · <span class="yoy ${dirClass(k.dir)}">${k.yoy}</span></div>
+      <div class="kpi-spark"><canvas id="spark-${i}"></canvas></div>
+    </div>`).join('');
+  kpis.forEach((k,i)=> sparkline('spark-'+i, randSeries(100), k.color));
+}
+
+// ---- department donut ----
+let deptChart, barChart;
+function renderDeptDonut(){
+  const list = visibleBins();
+  const byDept = {};
+  list.forEach(b=>{ byDept[b.department] = (byDept[b.department]||0) + b.qty; });
+  const labels = Object.keys(byDept);
+  const data = Object.values(byDept);
+  const palette = [cssVar('--accent'), cssVar('--accent-2'), cssVar('--amber'), cssVar('--green'), cssVar('--red')];
+  const ctx = document.getElementById('dept-donut').getContext('2d');
+  if(deptChart) deptChart.destroy();
+  deptChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data, backgroundColor:palette, borderColor:cssVar('--card'), borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ color:cssVar('--ink-soft'), boxWidth:10, font:{size:11} } } } }
+  });
+}
+
+// ---- category bar ----
+function setBarZoom(mode){
+  barZoom = mode;
+  document.getElementById('bar-top').classList.toggle('active', mode==='top');
+  document.getElementById('bar-all').classList.toggle('active', mode==='all');
+  renderCategoryBar();
+}
+function renderCategoryBar(){
+  const list = visibleBins();
+  const byCat = {};
+  list.forEach(b=>{ byCat[b.category] = (byCat[b.category]||0) + b.qty; });
+  let entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  if(barZoom==='top') entries = entries.slice(0,6);
+  const labels = entries.map(e=>e[0]);
+  const data = entries.map(e=>e[1]);
+  const ctx = document.getElementById('category-bar').getContext('2d');
+  if(barChart) barChart.destroy();
+  barChart = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data, backgroundColor:cssVar('--accent'), borderRadius:5, maxBarThickness:34 }] },
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:cssVar('--card'), borderColor:cssVar('--line'), borderWidth:1, titleColor:cssVar('--ink'), bodyColor:cssVar('--ink') } },
+      scales:{ x:{ grid:{color:cssVar('--line')}, ticks:{color:cssVar('--ink-soft')} }, y:{ grid:{display:false}, ticks:{color:cssVar('--ink-soft')} } } }
+  });
+}
+
+// ---- product search table ----
+function populateCategoryFilter(){
+  const sel = document.getElementById('category-filter');
+  const cats = [...new Set(bins.map(b=>b.category))];
+  sel.innerHTML = '<option value="all">All categories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+}
+function renderProductTable(){
+  const cat = document.getElementById('category-filter').value;
+  const q = document.getElementById('table-search').value.trim().toLowerCase();
+  const rows = visibleBins().filter(b =>
+    (cat==='all' || b.category===cat) &&
+    (!q || b.name.toLowerCase().includes(q) || b.id.toLowerCase().includes(q))
+  );
+  document.getElementById('product-table-body').innerHTML = rows.map(b=>`
+    <tr onclick="selectBin('${b.id}')" style="cursor:pointer">
+      <td class="mono">${b.id}</td>
+      <td>${b.name}</td>
+      <td>${b.category}</td>
+      <td><span class="badge-dept">${b.department}</span></td>
+      <td class="mono">${b.qty.toLocaleString()} ${b.unit}</td>
+      <td class="mono">${b.days}d</td>
+    </tr>`).join('') || '<tr><td colspan="6" style="color:var(--ink-soft);padding:16px;">No products match.</td></tr>';
+}
+function runSidebarSearch(){
+  const q = document.getElementById('sidebar-search').value;
+  document.getElementById('table-search').value = q;
+  document.getElementById('nav').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[data-target="product-search-section"]').classList.add('active');
+  document.getElementById('product-search-section').scrollIntoView({behavior:'smooth'});
+  renderProductTable();
+}
+
+// ---- cross-department availability ----
+function renderXDept(){
+  const byCat = {};
+  bins.forEach(b=>{ (byCat[b.category] = byCat[b.category]||[]).push(b); });
+  const rows = Object.entries(byCat).filter(([,list])=>list.length>1);
+  document.getElementById('xdept-list').innerHTML = rows.map(([cat,list])=>{
+    const short = list.filter(b=>b.status!=='ok');
+    const surplus = list.filter(b=>b.status==='ok' && b.days>30);
+    if(!short.length) return '';
+    return `
+    <div class="xdept-row">
+      <div class="top"><span>${cat}</span><span style="font-weight:400;color:var(--ink-soft);font-size:11.5px;">${list.length} bins across departments</span></div>
+      <div class="depts">
+        ${short.map(b=>`<span class="dept-pill short">${b.department} — ${b.days}d left, ${b.qty} ${b.unit}</span>`).join('')}
+        ${surplus.map(b=>`<span class="dept-pill surplus">${b.department} has surplus — ${b.qty} ${b.unit}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('') || '<div class="fifo-empty">No cross-department shortages detected right now.</div>';
+}
+
+// ---- modal ----
+function openModal(kind){
+  const backdrop = document.getElementById('modal-backdrop');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const list = visibleBins();
+  if(kind==='dept'){
+    title.textContent = 'Full stock detail by department';
+    body.innerHTML = `<table><thead><tr><th>SKU</th><th>Product</th><th>Department</th><th>Qty</th></tr></thead><tbody>${
+      list.map(b=>`<tr><td class="mono">${b.id}</td><td>${b.name}</td><td>${b.department}</td><td class="mono">${b.qty.toLocaleString()} ${b.unit}</td></tr>`).join('')
+    }</tbody></table>`;
+  } else {
+    title.textContent = 'Full stock detail by category';
+    body.innerHTML = `<table><thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Qty</th></tr></thead><tbody>${
+      list.map(b=>`<tr><td class="mono">${b.id}</td><td>${b.name}</td><td>${b.category}</td><td class="mono">${b.qty.toLocaleString()} ${b.unit}</td></tr>`).join('')
+    }</tbody></table>`;
+  }
+  backdrop.classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-backdrop').classList.remove('open'); }
 
 // ---- invoice upload → Claude extraction ----
 function fileToBase64(file){
@@ -540,7 +904,7 @@ async function extractInvoiceData(file){
   const contentBlock = isPdf
     ? { type:'document', source:{ type:'base64', media_type:'application/pdf', data:base64 } }
     : { type:'image', source:{ type:'base64', media_type:file.type || 'image/jpeg', data:base64 } };
-  const instruction = `Read this supplier invoice or courier slip for a manufacturing parts warehouse. Respond with ONLY strict JSON, no markdown fences, no preamble:
+  const instruction = `Read this supplier invoice or courier slip for an electronics/mechanical parts warehouse. Respond with ONLY strict JSON, no markdown fences, no preamble:
 {"supplier": string|null, "courier": string|null, "tracking_number": string|null, "invoice_date": "YYYY-MM-DD"|null, "items": [{"name": string, "qty": number, "unit": string}]}
 Use null for anything not present. Items empty array if none found.`;
 
@@ -565,37 +929,58 @@ async function handleInvoiceUpload(evt){
   statusEl.textContent = 'Reading invoice…';
   try{
     const parsed = await extractInvoiceData(file);
+    const tracking = parsed.tracking_number || '—';
     const newShipment = {
       id: 'S'+(shipments.length+1),
       supplier: parsed.supplier || 'Unknown supplier',
-      courier: parsed.courier || 'Unknown courier',
+      courier: parsed.courier || guessCourierFromTracking(tracking) || 'Unknown courier',
       ordered: parsed.invoice_date || new Date().toISOString().slice(0,10),
       delivered: null,
       promisedDays: 5,
       item: (parsed.items && parsed.items[0] && parsed.items[0].name) || 'Item (see invoice)',
       qty: (parsed.items && parsed.items[0] && parsed.items[0].qty) || 0,
-      tracking: parsed.tracking_number || '—',
-      binId: null
+      tracking, binId:null
     };
     shipments = [...shipments, newShipment];
     if(CONFIG.useFirebase) saveShipmentsToFirebase();
-    statusEl.textContent = `Logged: ${newShipment.supplier} · ${newShipment.item} · tracking ${newShipment.tracking}`;
+    statusEl.textContent = `Logged: ${newShipment.supplier} · ${newShipment.item} · tracking ${newShipment.tracking} (courier: ${newShipment.courier})`;
     renderShipments(); renderScorecards();
   }catch(e){
     console.error(e);
-    statusEl.textContent = 'Could not read this invoice — try a clearer photo or a text-based PDF.';
+    statusEl.textContent = 'Could not read this invoice — try a clearer photo/scan, or a text-based PDF. Note: outside Claude.ai this call needs your own backend proxy with an Anthropic API key.';
   }
 }
 
-// ---- shift toggle (in-memory, no persistence) ----
-function setShift(mode){
-  currentShift = mode;
-  document.documentElement.setAttribute('data-shift', mode);
-  document.getElementById('btn-day').classList.toggle('active', mode==='day');
-  document.getElementById('btn-night').classList.toggle('active', mode==='night');
-  const active = document.querySelector('.tag.active');
-  if(active) selectBin(active.dataset.id);
+// ---- theme ----
+function setTheme(mode){
+  currentTheme = mode;
+  document.documentElement.setAttribute('data-theme', mode);
+  document.getElementById('btn-light').classList.toggle('active', mode==='light');
+  document.getElementById('btn-dark').classList.toggle('active', mode==='dark');
+  renderAll(true);
 }
+
+// ---- year / movement filters ----
+document.getElementById('year-chips').addEventListener('click', e=>{
+  const btn = e.target.closest('.chip'); if(!btn) return;
+  currentYear = btn.dataset.year;
+  document.querySelectorAll('#year-chips .chip').forEach(c=>c.classList.toggle('active', c===btn));
+  document.getElementById('year-label').textContent = 'Viewing FY'+currentYear;
+  renderKPIs();
+});
+document.getElementById('movement-chips').addEventListener('click', e=>{
+  const btn = e.target.closest('.chip'); if(!btn) return;
+  currentMovement = btn.dataset.move;
+  document.querySelectorAll('#movement-chips .chip').forEach(c=>c.classList.toggle('active', c===btn));
+  renderAll(false);
+});
+document.getElementById('nav').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const target = document.getElementById(btn.dataset.target);
+  if(target) target.scrollIntoView({behavior:'smooth'});
+});
 
 // ---- Firebase (optional live wiring) ----
 function saveShipmentsToFirebase(){
@@ -612,25 +997,28 @@ function initFirebase(){
     db.ref('bins').on('value', snap=>{
       const val = snap.val();
       if(!val) return;
-      bins = annotate(Object.entries(val).map(([id,b])=>({ id, name:b.name, qty:b.qty, unit:b.unit||'pcs', weight:b.weight_g, rate:b.rate_per_day, supplier:b.supplier, batches:b.batches||[] })));
+      bins = annotate(Object.entries(val).map(([id,b])=>({ id, name:b.name, qty:b.qty, unit:b.unit||'pcs', rate:b.rate_per_day, supplier:b.supplier, category:b.category||'Uncategorized', department:b.department||'Unassigned', price:b.price||0, batches:b.batches||[] })));
       dataSourceLabel = 'Live — gateway connected';
       document.getElementById('sync-dot').classList.add('live');
-      renderAll();
-    }, err=>{ console.error(err); dataSourceLabel='Live sync failed — showing demo data'; renderAll(); });
+      renderAll(false);
+    }, err=>{ console.error(err); dataSourceLabel='Live sync failed — showing demo data'; renderAll(false); });
     db.ref('shipments').on('value', snap=>{
       const val = snap.val();
       if(val){ shipments = Object.values(val); renderShipments(); renderScorecards(); }
     });
-  }catch(e){ console.error(e); dataSourceLabel='Live sync failed — showing demo data'; renderAll(); }
+  }catch(e){ console.error(e); dataSourceLabel='Live sync failed — showing demo data'; renderAll(false); }
 }
 
-function renderAll(){
-  renderStrip(); renderGrid(); renderShipments(); renderScorecards(); renderFifo();
-  const fallback = [...bins].sort((a,b)=>a.days-b.days)[0];
-  if(fallback) selectBin(fallback.id);
+function renderAll(keepSelection){
+  renderKPIs(); renderStrip(); renderDeptDonut(); renderCategoryBar(); renderGrid();
+  populateCategoryFilter(); renderProductTable(); renderXDept(); renderShipments(); renderScorecards(); renderFifo();
+  const activeId = document.querySelector('.tag.active')?.dataset.id;
+  const fallback = [...visibleBins()].sort((a,b)=>a.days-b.days)[0];
+  const target = (keepSelection && activeId && bins.find(x=>x.id===activeId)) ? activeId : (fallback ? fallback.id : null);
+  if(target) selectBin(target);
   document.getElementById('source-label').textContent = dataSourceLabel;
 }
-renderAll();
+renderAll(false);
 initFirebase();
 
 function tick(){ document.getElementById('clock').textContent = new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}); }
