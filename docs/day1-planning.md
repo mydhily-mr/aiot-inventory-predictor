@@ -84,9 +84,7 @@ The flow works like this:
 | Component | Interface | MAX32630FTHR Pin(s) | Notes |
 |---|---|---|---|
 | HX711 #1 (Bin 1 load cell) | Digital (DT/SCK) | e.g. `P0`, `P1` | One HX711 per bin |
-| HX711 #2 (Bin 2 load cell) | Digital (DT/SCK) | e.g. `P2`, `P3` | |
-| HX711 #3 (Bin 3 load cell) | Digital (DT/SCK) | e.g. `P4`, `P5` | |
-| USB Camera | USB / UART bridge | USB host or external Pi/module | If MAX32630FTHR lacks native USB host, consider offloading camera capture to a companion board (e.g. Raspberry Pi) and sending results over serial/Wi-Fi |
+| Arducam Camera | USB / UART bridge | SPI | |
 | RFID Reader (e.g. RC522) | SPI | `MOSI`, `MISO`, `SCK`, `SS` | |
 | OLED Display | I2C | `SDA`, `SCL` | |
 | Temp/Humidity Sensor | I2C or 1-Wire | `SDA`, `SCL` or 1 GPIO | |
