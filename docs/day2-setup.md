@@ -188,6 +188,47 @@ DEFAULT_REORDER_BUFFER_DAYS = 2
 3. Within a couple of minutes you'll get a reply containing your API key — save it, you'll need it in the script.
 
 
+# Hardware setup
+## Initial setup:
+
+Reference Link: https://daplink.io/ 
+
+#### Connections:
+- Ribbon cable orientation — the cable has a colored stripe on one edge (marking pin 1). 
+
+- It looks seated straight into both headers, but it's worth double-checking that the stripe lines up with the pin-1 marking (usually a small triangle, dot, or square pad) on both the PICO's connector and the target's header. 
+
+- A cable seated backward or offset by one pin is a classic cause of exactly this "board not found" symptom, since the boards will still power up fine but SWD communication will fail.
+
+- Give the MCU board its own power
+The MAX32625PICO cannot supply power to every target board through the debug header alone. If your MCU is only powered through the PICO connection (rather than its own USB/power cable), connect a separate powered USB cable directly to the MCU board as well, so both boards are independently powered during programming.
+
+### On Windows11 PC:
+1. Download the firmware file.
+
+2. While holding down the boards reset button, connect the boards USB debug port to the computer. It should enumerate and mount as ``` BOOTLOADER ``` or ``` MAINTENANCE ```. For boards that enumerate as ``` BOOTLOADER ``` see our blog to determine if an update for the DAPLink bootloader is available.
+
+3. Drag-and-drop the firmware file onto the mounted drive.
+Wait for the file copy operation to complete.
+
+4. Power cycle the board - Disconnect the USB cable from the board to remove power, then reconnect it normally without holding any buttons.
+
+5. It will now enumerate and mount as ``` DAPLIN ``` or the name of the board.
+
+6. Windows has removed the wmic command, and the older Maxim daplink tool, so try the below method:
+
+
+##### Export the compiled binary
+In Arduino IDE, go to Sketch → Export Compiled Binary. This saves the .bin file into your sketch's own folder permanently, instead of a temp folder that gets wiped — open the sketch folder afterward (Sketch → Show Sketch Folder) and you'll see it there.
+
+##### Open the DAPLINK drive
+Open File Explorer and confirm the DAPLINK drive is mounted (it should show a drive letter next to the label DAPLINK, alongside DETAILS.TXT).
+
+##### Copy the .bin file onto the DAPLINK drive
+Simply drag the exported .bin file from your sketch folder and drop it onto the DAPLINK drive, just like copying a file to a USB stick. The drive will briefly disappear and remount as it flashes the firmware.
+
+##### Check for success
+If something went wrong, a FAIL.TXT file will appear on the drive explaining why. If it succeeds, the board will reset and your Blink sketch should start running — with Auto Reset enabled on your board, this happens automatically.
 
 ---
 [← Back: Software Architecture & Code](software-architecture.md) · [← Back to README](../README.md)

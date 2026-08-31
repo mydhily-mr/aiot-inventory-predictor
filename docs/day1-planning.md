@@ -105,13 +105,19 @@ The flow works like this:
 
 | Hardware | Purpose | Quantity |
 |---|---|---|
-| MAX32630FTHR | IoT / edge controller | 1 |
-| Load cell | Quantity measurement | 3 |
-| HX711 | Load-cell interface (amplifier/ADC) | 3 |
-| USB camera | Component identification | 1 |
-| Temperature/humidity sensor | Environmental monitoring | 1 |
+| MAX32630FTHR | edge controller | 1 |
+| PIR sensor | Human detection -  To wakeup sensing node | 1 |
+| Load cell | Quantity measurement | 1 |
+| HX711 | Load-cell interface | 1 |
 | OLED display | Local status display | 1 |
-| Storage bins | Physical inventory containers | 3 |
+|  SENSOR OPTO TRANS 15MM REFL PCB | detects if a product is present or if the slot is empty | 1 |
+|  VL53L0X TIME FLIGHT DIST STEMMA | Triggering actions when a user's hand or body approaches a device | 1 |
+| USB camera | Component identification | 1 |
+| Ultrasonic sensor | Empty space identification | 1 |
+| Buzzer | Warning | 1 |
+| Raspberry Pi Cam v1.3 | Camera | 1 |
+| Temperature/humidity sensor | Environmental monitoring | 1 |
+| Storage bins | Physical inventory containers | 1 |
 | Breadboard | Prototyping | 1–2 |
 | Wires / connectors | Interconnects | As required |
 
