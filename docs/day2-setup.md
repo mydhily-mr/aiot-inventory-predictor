@@ -230,5 +230,8 @@ Simply drag the exported .bin file from your sketch folder and drop it onto the 
 ##### Check for success
 If something went wrong, a FAIL.TXT file will appear on the drive explaining why. If it succeeds, the board will reset and your Blink sketch should start running — with Auto Reset enabled on your board, this happens automatically.
 
+#### Note: 
+Eventhough i flashed the board using windows 11 PC, Later i switched to ubuntu 20.04 LTS, becuase driver support was limited in windows for me. 
+
 ---
 [← Back: Software Architecture & Code](software-architecture.md) · [← Back to README](../README.md)
