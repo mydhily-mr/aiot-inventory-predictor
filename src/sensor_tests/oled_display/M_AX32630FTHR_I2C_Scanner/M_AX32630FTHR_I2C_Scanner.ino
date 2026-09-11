@@ -4,12 +4,18 @@
  * Run this first, before anything else, to confirm I2C hardware and
  * wiring are working. Prints the address of every device that responds
  * on the bus. An SSD1306 OLED will typically show up as 0x3C or 0x3D.
+ * 
+ * OLED       MAX32630
+ * GND        GND
+ * VCC        3V3
+ * SDA        P3_4
+ * SCL        P3_5
  */
 
 #include <Wire.h>
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial) { delay(10); }
   Serial.println("\nMAX32630FTHR I2C scanner starting...");
 
