@@ -11,6 +11,12 @@
  * If nothing shows up: run MAX32630FTHR_I2C_Scanner.ino first to confirm
  * the display is actually responding on the bus, and to find its real
  * address if it's not the common default (0x3C) assumed below.
+ * 
+ * OLED       MAX32630
+ * GND        GND
+ * VCC        3V3
+ * SDA        P3_4
+ * SCL        P3_5
  */
 
 #include <Wire.h>
@@ -24,7 +30,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1); // -1 = no dedicated reset pin
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial) { delay(10); }
   Serial.println("\nMAX32630FTHR SSD1306 example starting...");
 
