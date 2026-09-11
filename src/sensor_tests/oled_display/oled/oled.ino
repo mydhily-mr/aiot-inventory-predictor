@@ -12,11 +12,12 @@
  * the display is actually responding on the bus, and to find its real
  * address if it's not the common default (0x3C) assumed below.
  * 
- * OLED       MAX32630
+ * OLED       MAX32630 (Arduino pins 28/29.)
  * GND        GND
  * VCC        3V3
  * SDA        P3_4
  * SCL        P3_5
+ * 
  */
 
 #include <Wire.h>
@@ -45,7 +46,7 @@ void setup() {
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(10, 25);
-  display.println("Hello World");
+  display.println("Hello World123");
   display.display(); // nothing appears on the screen until this is called
 }
 
