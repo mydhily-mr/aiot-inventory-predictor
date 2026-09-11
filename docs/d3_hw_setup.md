@@ -3,6 +3,15 @@
 ## Day 2 - First Hello World on MAX32630FTHR board
 <!-- **01/09/2026** -->
 
+## MAX32630 board Pin Diagram
+  ![MAX32630 board Pin Diagram](../images/d3_max1.jpeg)— MAX32630 board Pin Diagram.
+
+  ![MAX32630 board Pin Diagram](../images/d3_max2.jpeg)— MAX32630 board Pin Diagram.
+
+  ![MAX32630 board Pin Diagram](../images/d3_max3.jpeg)— MAXDAP board Pin Diagram.
+
+  ![MAX32630 board Pin Diagram](../images/d3_max4.jpeg)— MAX32625PICO board Pin Diagram.
+
 
 ## Prerequisties
 - Arduino IDE 1.18.9

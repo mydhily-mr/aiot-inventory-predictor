@@ -60,6 +60,7 @@ dedicated WiFi bridge.
 | GND | GND |
 
 Power is given to both boards seperately.
+  ![wifi serial monitor](../images/d5_wifi.png)— Wi-Fi Connection.
 
 **Logic:**
 1. MAX32630FTHR takes a sensor reading every 2 seconds and sends it as a text
