@@ -31,13 +31,20 @@
 const int HX711_dout = 45; //Connect dout of sensor to GPIO-2 of aries board
 const int HX711_sck = 44; //Connect dout of sensor to GPIO-3 of aries board
 
+// --- inventory calibration for THIS bin (fill these in) ---
+const float containerTareGrams = 31.0;   // weight of the empty reel/box, measured once
+const float weightPerPiece     = 0.18;   // grams per single component, measured once
+// ------------------------------------------------------------
+
 //HX711 constructor:
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 
-unsigned long t = 0;
+unsigned long t = 0;  // paces the load-cell debug print
+unsigned long lastSendTime = 0;
+const unsigned long sendInterval = 2000; // how often to push over Serial2
+float latestWeight = 0; // cached, updated by getSensorData() every loop pass
 
 void hx711_setup() {
-  //weight sensor
   float calibrationValue; // calibration value
   calibrationValue = 530.0; // we need to calculate this before to get correct weight measurement
 
@@ -73,20 +80,7 @@ void hx711_setup() {
 
 
 float getSensorData() {
-  float weight;
-  // TEMPORARY, for verifying the pipeline end-to-end: an incrementing
-  // counter instead of random(1000). A predictable, ever-increasing
-  // sequence (1, 2, 3, 4...) is easy to visually match across the
-  // MAX32630FTHR monitor, the NodeMCU monitor, and Firebase, with no
-  // ambiguity about whether what you're looking at lines up - unlike
-  // random values, where three separately-scrolling views with no
-  // shared timestamp are genuinely hard to eyeball-correlate even when
-  // everything is working correctly. Swap back to a real sensor (or
-  // back to random(1000) for testing) once you've confirmed the chain.
-  //static int counter = 0;
-  //counter++;
-  //return counter;
-
+  //float weight;
   static boolean newDataReady = 0;
   const int serialPrintInterval = 500; //increase value to slow down serial print activity
 
@@ -97,9 +91,9 @@ float getSensorData() {
   // get smoothed value from the dataset:
   if (newDataReady) {
     if (millis() > t + serialPrintInterval) {
-      weight = LoadCell.getData();
+      latestWeight = LoadCell.getData();
       Serial.print("Load_cell output val: ");
-      Serial.println(weight);
+      Serial.println(latestWeight);
       newDataReady = 0;
       t = millis();
     }
@@ -116,8 +110,17 @@ float getSensorData() {
     Serial.println("Tare complete");
   }
 
-  return weight;
+  return latestWeight;
 }
+
+// -- when you add sensor #2, follow this exact shape --
+// float latestOtherValue = 0;
+// float getOtherSensorData() {
+//   // poll its hardware here, cache into latestOtherValue, return it
+//   // must NOT contain any delay() of its own
+//   return latestOtherValue;
+// }
+
 
 void setup() {
   Serial.begin(9600);   // matches Serial2's baud - required, see note above
@@ -129,14 +132,20 @@ void setup() {
 
 
 void loop() {
-  float value = getSensorData();
-  char msg[32];
-  sprintf(msg, "%.2f", value); // sprintf %f confirmed safe on this core (full newlib link)
+  getSensorData();          // poll load cell - every pass, no delay
+  // getOtherSensorData();  // <- next sensor goes here, same way
 
-  Serial2.println(msg);
+  if (millis() - lastSendTime >= sendInterval) {
+    lastSendTime = millis();
 
-  Serial.print("Sent: ");
-  Serial.println(msg);
+    long pieceCount = (long)((latestWeight - containerTareGrams) / weightPerPiece);
+    if (pieceCount < 0) pieceCount = 0;
 
-  delay(2000); // how often to push a fresh reading
+    char msg[32];
+    sprintf(msg, "%ld", pieceCount); // extend this line later to include other sensors
+
+    Serial2.println(msg);
+    Serial.print("Sent: ");
+    Serial.println(msg);
+  }
 }
