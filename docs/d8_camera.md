@@ -4,11 +4,21 @@
 
 ### Goal
 
-Interfacing SSD1306 Oled display with MAX32630fthr board.
+Interfacing Camera Module  with MAX32630fthr board.
 
 ### Final working setup
 
-**Hardware:** MAX32630FTHR, NHX711 Weight sensor 5Kg
+**Hardware:** MAX32630FTHR, Raspberry Pi Camera Module, Grove Vision AI Module v2
+
+
+**Training:**
+ ![wifi serial monitor](../images/cam1.png)— Oled display
+
+ **Training:**
+ ![wifi serial monitor](../images/cam2.png)— Oled display
+
+ **Training:**
+ ![wifi serial monitor](../images/cam3.png)— Oled display
 
 **Wiring** :
 | Weight Sensor  | MAX32630FTHR |
@@ -18,7 +28,6 @@ Interfacing SSD1306 Oled display with MAX32630fthr board.
 | SDA    | P3_4 (pin 28 in software) |
 | SCL    | P3_5 (pin 29 in software) |
 
-  ![wifi serial monitor](../images/d7_oled.PNG)— OLED display Connection.
 
 **Code Snippet:**
  ![wifi serial monitor](../images/d7_oled2.png)— Oled display
