@@ -46,7 +46,7 @@ void setup() {
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(10, 25);
-  display.println("Hello World123");
+  display.println("Hello World");
   display.display(); // nothing appears on the screen until this is called
 }
 

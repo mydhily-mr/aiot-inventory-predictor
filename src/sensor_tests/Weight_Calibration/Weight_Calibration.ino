@@ -25,7 +25,7 @@
 
    3) Inside the code search for the line "known_mass = 1000;" and Substitute this value with the value of your known weight( in GRAMS )
    
-   4) After uploading the code, open the Serial Monitor at a baud rate of 57600.
+   4) After uploading the code, open the Serial Monitor at a baud rate of 9600.
 
    5) Place the load cell at a level stable surface
 
