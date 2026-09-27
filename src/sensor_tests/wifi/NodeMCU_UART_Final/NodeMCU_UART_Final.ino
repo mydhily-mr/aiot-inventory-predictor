@@ -1,19 +1,24 @@
 /*
-   NodeMCU <-> MAX32630FTHR <-> Firebase bridge (simplified, push-based)
-
-   MAX32630FTHR pushes a fresh reading every 2 seconds, unprompted -
-   this sketch just listens continuously and relays whatever arrives to
-   Firebase. No "Start" request, no waiting for available() > 0 before
-   speaking - that pattern could deadlock if both sides ended up waiting
-   on each other; this version can't, since NodeMCU never needs to send
-   anything to keep the exchange going.
-
-   Wiring (unchanged from the original project):
-   NodeMCU D7 (GPIO13, RX) <- MAX32630FTHR P3_1 (Serial2 TX)
-   NodeMCU D8 (GPIO15, TX) -> MAX32630FTHR P3_0 (Serial2 RX) - unused by
-     this simplified version, but fine to leave wired for future use
-   NodeMCU 3.3V -> MAX32630FTHR 3V3, NodeMCU GND -> MAX32630FTHR GND
-*/
+ * NodeMCU <-> MAX32630FTHR <-> Firebase bridge (push-based, generic relay)
+ *
+ * MAX32630FTHR owns all the bin identity/metadata and decides what gets
+ * written where - this sketch just parses two message types it receives
+ * over MaxSerial and relays fields to Firebase. It doesn't know or care
+ * what a "resistor" or "category" is.
+ *
+ *  META|<binId>|<name>|<category>|<department>|<unit>|<ratePerDay>|<supplier>|<price>|<batchId>|<firstScanned>|<initialQty>
+ *    -> static bin info, sent once at boot + resent periodically as a safety net
+ *  DATA|<binId>|<qty>|<distanceCm>|<picksEstimated>
+ *    -> live values, sent every 2s. picksEstimated is a running total of
+ *       estimated picks, derived on the MAX32630FTHR side by correlating
+ *       IR hand-detection events with the load-cell weight drop.
+ *
+ * Wiring (unchanged from the original project):
+ * NodeMCU D7 (GPIO13, RX) <- MAX32630FTHR P3_1 (Serial2 TX)
+ * NodeMCU D8 (GPIO15, TX) -> MAX32630FTHR P3_0 (Serial2 RX) - unused by
+ *   this simplified version, but fine to leave wired for future use
+ * NodeMCU 3.3V -> MAX32630FTHR 3V3, NodeMCU GND -> MAX32630FTHR GND
+ */
 
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -30,9 +35,13 @@
 // ---------- UART link to MAX32630FTHR ----------
 SoftwareSerial MaxSerial(13, 15); // RX, TX
 
-const int BUF_SIZE = 32;
+const int BUF_SIZE = 160;   // must comfortably fit the longest META line
 char rxBuffer[BUF_SIZE];
 long eventCounter = 0;
+
+String currentBinId = "";
+String currentBatchId = "";
+bool metadataReceived = false;
 
 // ---------------------------------------------------------
 // Reads one line (ending in '\n') from MaxSerial into rxBuffer.
@@ -97,6 +106,70 @@ void sendToFirebase(const String &path, const String &jsonValue) {
   }
 }
 
+void handleMetadata(char *data) {
+  char *binId        = strtok(data, "|");
+  char *name         = strtok(NULL, "|");
+  char *category     = strtok(NULL, "|");
+  char *department   = strtok(NULL, "|");
+  char *unit         = strtok(NULL, "|");
+  char *ratePerDay   = strtok(NULL, "|");
+  char *supplier     = strtok(NULL, "|");
+  char *price        = strtok(NULL, "|");
+  char *batchId      = strtok(NULL, "|");
+  char *firstScanned = strtok(NULL, "|");
+  char *initialQty   = strtok(NULL, "|");
+
+  if (binId == NULL || batchId == NULL) {
+    Serial.println("Malformed META line, skipping");
+    return;
+  }
+
+  currentBinId = String(binId);
+  currentBatchId = String(batchId);
+
+  String base = "bins/" + currentBinId;
+  sendToFirebase(base + "/name", "\"" + String(name) + "\"");
+  sendToFirebase(base + "/category", "\"" + String(category) + "\"");
+  sendToFirebase(base + "/department", "\"" + String(department) + "\"");
+  sendToFirebase(base + "/unit", "\"" + String(unit) + "\"");
+  sendToFirebase(base + "/rate_per_day", String(ratePerDay));
+  sendToFirebase(base + "/supplier", "\"" + String(supplier) + "\"");
+  sendToFirebase(base + "/price", String(price));
+  sendToFirebase(base + "/batches/" + currentBatchId + "/id", "\"" + currentBatchId + "\"");
+  sendToFirebase(base + "/batches/" + currentBatchId + "/firstScanned", "\"" + String(firstScanned) + "\"");
+  sendToFirebase(base + "/batches/" + currentBatchId + "/initial", String(initialQty));
+
+  metadataReceived = true;
+  Serial.println("Bin metadata written to Firebase");
+}
+
+void handleData(char *data) {
+  char *binId      = strtok(data, "|");
+  char *qty        = strtok(NULL, "|");
+  char *distanceCm = strtok(NULL, "|");
+  char *picks      = strtok(NULL, "|");
+
+  if (binId == NULL || qty == NULL) {
+    Serial.println("Malformed DATA line, skipping");
+    return;
+  }
+
+  if (!metadataReceived || currentBinId != String(binId)) {
+    Serial.println("Data received before metadata arrived - skipping this line");
+    return;
+  }
+
+  String base = "bins/" + currentBinId;
+  sendToFirebase(base + "/qty", String(qty));
+  sendToFirebase(base + "/batches/" + currentBatchId + "/remaining", String(qty));
+  if (distanceCm != NULL) {
+    sendToFirebase(base + "/distanceCm", String(distanceCm));
+  }
+  if (picks != NULL) {
+    sendToFirebase(base + "/picksEstimated", String(picks));
+  }
+}
+
 void setup() {
   Serial.begin(9600);
   MaxSerial.begin(9600);
@@ -121,22 +194,18 @@ void setup() {
 void loop() {
   if (MaxSerial.available() > 0) {
     if (readLine()) {
-      Serial.print("Received from MAX32630FTHR: ");
+      Serial.print("Received: ");
       Serial.println(rxBuffer);
 
-      // rxBuffer format: "<pieceCount>,<distanceCm>" e.g. "20,15.3"
-      char *countStr = strtok(rxBuffer, ",");
-      char *distStr  = strtok(NULL, ",");
-      
-      if (countStr != NULL) {
-        sendToFirebase("SensorValue", String(countStr));
+      if (strncmp(rxBuffer, "META|", 5) == 0) {
+        handleMetadata(rxBuffer + 5);
+      } else if (strncmp(rxBuffer, "DATA|", 5) == 0) {
+        handleData(rxBuffer + 5);
+        sendToFirebase("Event", String(eventCounter));
+        eventCounter++;
+      } else {
+        Serial.println("Unrecognized message format, ignoring");
       }
-      if (distStr != NULL) {
-        sendToFirebase("DistanceCm", String(distStr));
-      }
-
-      sendToFirebase("Event", String(eventCounter));
-      eventCounter++;
     } else {
       Serial.println("Line read timed out (partial data received)");
     }

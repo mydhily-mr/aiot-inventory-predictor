@@ -21,6 +21,30 @@
    Dout         -   P5_5 (pin 45 in software)
    sck          -   P5_4 (pin 44 in software)
 
+ *     *** OLED (SSD1306) ***
+   Requires: Adafruit SSD1306, Adafruit GFX Library, Adafruit BusIO
+   OLED       MAX32630 (Arduino pins 28/29)
+   GND        GND
+   VCC        3V3
+   SDA        P3_4
+   SCL        P3_5
+
+ *     *** Ultrasonic (HC-SR04) ***
+   Important: ECHO outputs 5V - use a voltage divider (ECHO -> 1k -> P4_0,
+   P4_0 -> 2k -> GND) before connecting to the board. TRIG is fine direct.
+   GND          -   GND
+   VCC          -   3V3
+   ECHO         -   P4_0
+   TRIG         -   P5_6
+
+ *     *** IR Sensor ***
+   Active-HIGH module (HIGH = object detected, LOW = clear).
+   Used here to estimate picks: on hand-arrival we snapshot the weight;
+   on hand-departure we wait for the scale to settle, then the weight
+   drop / weightPerPiece gives an estimated pick quantity.
+   GND          -   GND
+   VCC          -   3V3
+   SIG          -   P3_3
 */
 
 
@@ -30,8 +54,6 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define TRIG_PIN P5_6 //ultrasonic senosr trigger pin
-#define ECHO_PIN P4_0 //ultrasonic senosr echo pin
 
 //weight sensor pins:
 const int HX711_dout = 45; //Connect dout of sensor to GPIO-2 of aries board
@@ -45,10 +67,46 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1); // -1 = no ded
 // -------------------
 
 // --- Ultrasonic (HC-SR04) config ---
+#define TRIG_PIN P5_6
+#define ECHO_PIN P4_0
+
 unsigned long lastDistanceReadTime = 0;
 const unsigned long distanceReadInterval = 1000; // how often to trigger a new distance reading (ms)
 float latestDistanceCm = 0; // cached, updated by getDistanceData()
 // ------------------------------------
+
+// --- IR sensor / pick estimation config ---
+#define IR_PIN P3_3
+
+int lastIrState = LOW;
+unsigned long lastIrChangeTime = 0;
+const unsigned long irDebounceMs = 50; // debounce for the raw IR signal itself
+
+const unsigned long pickSettleMs = 1000; // time to let the scale restabilize after a hand leaves, before trusting the new weight
+bool awaitingSettle = false;
+unsigned long settleStartTime = 0;
+float weightBeforePick = 0;
+long irEventCount = 0;          // raw hand-detected events - diagnostic only, not sent
+long picksEstimatedTotal = 0;   // cumulative estimated picks, derived from weight drop after each hand detection - this is what gets sent
+long lastPickQty = 0;           // most recent single pick's estimate - diagnostic only, not sent
+// -------------------------
+
+// --- Bin identity & metadata (edit per deployment - sent to NodeMCU, which relays to Firebase) ---
+const char* binId             = "BIN-RYG-08";
+const char* binName           = "RYG LED Sensor - 0805";   // avoid special chars like Omega/middot - keep ASCII
+const char* binCategory       = "Sensors";
+const char* binDepartment     = "Assembly";
+const char* binUnit           = "pcs";
+const int   binRatePerDay     = 300;
+const char* binSupplier       = "Digikey";
+const float binPrice          = 0.4;
+const char* batchId           = "B-3301";
+const char* batchFirstScanned = "2026-07-20";
+const long  batchInitialQty   = 1200;
+
+unsigned long lastMetadataSendTime = 0;
+const unsigned long metadataResendInterval = 30000; // resend periodically so NodeMCU catches it even if it missed the boot-time send
+// ------------------------------------------------------------
 
 // --- inventory calibration for THIS bin (fill these in) ---
 const float containerTareGrams = 55.89;   // weight of the empty reel/box, measured once
@@ -150,14 +208,6 @@ float getSensorData() {
   return latestWeight;
 }
 
-// -- when you add sensor #2, follow this exact shape --
-// float latestOtherValue = 0;
-// float getOtherSensorData() {
-//   // poll its hardware here, cache into latestOtherValue, return it
-//   // must NOT contain any delay() of its own
-//   return latestOtherValue;
-// }
-
 //OLED setup function
 void oled_setup() {
   Wire.begin(); // master mode, default pins (SDA = pin 28, SCL = pin 29)
@@ -195,7 +245,6 @@ void oled_showCount(long count) {
   display.display();
 }
 
-//Ultra sonic sensor setup
 void ultrasonic_setup() {
   useVDDIOH(TRIG_PIN);
   useVDDIOH(ECHO_PIN);
@@ -234,6 +283,68 @@ float getDistanceData() {
   return latestDistanceCm;
 }
 
+void ir_setup() {
+  useVDDIOH(IR_PIN);
+  pinMode(IR_PIN, INPUT);
+  lastIrState = digitalRead(IR_PIN);
+}
+
+void pollPickEstimator() {
+  int currentState = digitalRead(IR_PIN);
+
+  if (currentState != lastIrState && millis() - lastIrChangeTime >= irDebounceMs) {
+    lastIrChangeTime = millis();
+    lastIrState = currentState;
+
+    if (currentState == HIGH) {
+      // hand just arrived - remember the weight right before it starts picking
+      irEventCount++;
+      weightBeforePick = latestWeight;
+      awaitingSettle = false; // cancel any pending settle from a previous, unfinished pick
+      Serial.println("Hand detected - capturing baseline weight");
+    } else {
+      // hand just left - start the settle timer before trusting the new weight
+      settleStartTime = millis();
+      awaitingSettle = true;
+      Serial.println("Hand removed - waiting for scale to settle");
+    }
+  }
+
+  if (awaitingSettle && millis() - settleStartTime >= pickSettleMs) {
+    awaitingSettle = false;
+    float weightDrop = weightBeforePick - latestWeight;
+
+    if (weightDrop > (weightPerPiece / 2.0)) { // require at least half a piece's worth before counting anything
+      long pickedCount = (long)round(weightDrop / weightPerPiece);
+      if (pickedCount > 0) {
+        picksEstimatedTotal += pickedCount;
+        lastPickQty = pickedCount;
+        Serial.print("Estimated pick: ");
+        Serial.print(pickedCount);
+        Serial.print(" piece(s). Running total: ");
+        Serial.println(picksEstimatedTotal);
+      }
+    } else {
+      Serial.println("No significant weight drop - not counted as a pick");
+    }
+  }
+}
+
+void sendBinMetadata() {
+  Serial2.print("META|");
+  Serial2.print(binId);             Serial2.print('|');
+  Serial2.print(binName);           Serial2.print('|');
+  Serial2.print(binCategory);       Serial2.print('|');
+  Serial2.print(binDepartment);     Serial2.print('|');
+  Serial2.print(binUnit);           Serial2.print('|');
+  Serial2.print(binRatePerDay);     Serial2.print('|');
+  Serial2.print(binSupplier);       Serial2.print('|');
+  Serial2.print(binPrice);          Serial2.print('|');
+  Serial2.print(batchId);           Serial2.print('|');
+  Serial2.print(batchFirstScanned); Serial2.print('|');
+  Serial2.println(batchInitialQty);
+}
+
 void setup() {
   Serial.begin(9600);   // matches Serial2's baud - required, see note above
   Serial2.begin(9600);  // UART link to NodeMCU
@@ -241,13 +352,20 @@ void setup() {
   hx711_setup();
   oled_setup();
   ultrasonic_setup();
+  ir_setup();
+  sendBinMetadata();
 }
 
 
 void loop() {
   getSensorData();          // poll load cell - every pass, no delay
-  getDistanceData();    //poll ultrasonic sensor for distance
-  // getOtherSensorData();  // <- next sensor goes here, same way
+  getDistanceData();        // poll ultrasonic - self-gated to distanceReadInterval internally
+  pollPickEstimator();      // self-debounced/self-timed internally, no delay needed
+
+  if (millis() - lastMetadataSendTime >= metadataResendInterval) {
+    lastMetadataSendTime = millis();
+    sendBinMetadata();
+  }
 
   if (millis() - lastSendTime >= sendInterval) {
     lastSendTime = millis();
@@ -255,9 +373,8 @@ void loop() {
     long pieceCount = (long)((latestWeight - containerTareGrams) / weightPerPiece);
     if (pieceCount < 0) pieceCount = 0;
 
-    char msg[32];
-    sprintf(msg, "%ld,%.1f", pieceCount, latestDistanceCm); // format: pieceCount,distanceCm
-    //sprintf(msg, "%ld", pieceCount); // extend this line later to include other sensors
+    char msg[64];
+    sprintf(msg, "DATA|%s|%ld|%.1f|%ld", binId, pieceCount, latestDistanceCm, picksEstimatedTotal);
     oled_showCount(pieceCount);
 
     Serial2.println(msg);
