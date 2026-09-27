@@ -32,8 +32,9 @@ const int HX711_dout = 45; //Connect dout of sensor to GPIO-2 of aries board
 const int HX711_sck = 44; //Connect dout of sensor to GPIO-3 of aries board
 
 // --- inventory calibration for THIS bin (fill these in) ---
-const float containerTareGrams = 31.0;   // weight of the empty reel/box, measured once
-const float weightPerPiece     = 0.18;   // grams per single component, measured once
+const float containerTareGrams = 55.89;   // weight of the empty reel/box, measured once
+const float weightPerPiece     = 3.55;   // ryg tested - grams per single component, measured once
+const float noiseThreshold     = 0.5;    // grams - anything below this is treated as "no weight"
 // ------------------------------------------------------------
 
 //HX711 constructor:
@@ -78,6 +79,21 @@ void hx711_setup() {
   }
 }
 
+// Averages several readings into one stable value.
+// Handy for one-off jobs like measuring containerTareGrams by hand
+// (put the empty bin on the scale, call this, read the result off
+// the serial monitor, then paste that number into containerTareGrams above).
+float getAveragedWeight(int numReadings) {
+  float sum = 0;
+  int count = 0;
+  while (count < numReadings) {
+    if (LoadCell.update()) {
+      sum += LoadCell.getData();
+      count++;
+    }
+  }
+  return sum / numReadings;
+}
 
 float getSensorData() {
   //float weight;
@@ -91,7 +107,8 @@ float getSensorData() {
   // get smoothed value from the dataset:
   if (newDataReady) {
     if (millis() > t + serialPrintInterval) {
-      latestWeight = LoadCell.getData();
+      float raw = LoadCell.getData();
+      latestWeight = (fabs(raw) < noiseThreshold) ? 0.0 : raw;
       Serial.print("Load_cell output val: ");
       Serial.println(latestWeight);
       newDataReady = 0;

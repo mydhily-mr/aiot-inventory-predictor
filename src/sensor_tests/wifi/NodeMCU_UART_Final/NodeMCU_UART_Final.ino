@@ -21,8 +21,8 @@
 #include <SoftwareSerial.h>
 
 // ---------- Wi-Fi credentials ----------
-#define WIFI_SSID       "GNXXXXXXXXXX"   //put your wifi/hotspot name here
-#define WIFI_PASSWORD   "XXXXXXXX"        //put your wifi/hotspot password here
+#define WIFI_SSID       "GNXS-2.4G-32E5B0"   //put your wifi/hotspot name here
+#define WIFI_PASSWORD   "12345678@"        //put your wifi/hotspot password here
 // ---------- Firebase Realtime Database ----------
 #define FIREBASE_HOST   "randomdata-643f2-default-rtdb.asia-southeast1.firebasedatabase.app"
 #define FIREBASE_AUTH   ""
