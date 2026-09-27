@@ -20,16 +20,27 @@
    GND          -   GND
    Dout         -   P5_5 (pin 45 in software)
    sck          -   P5_4 (pin 44 in software)
+
 */
 
 
 
 #include <HX711_ADC.h> //weight sensor 
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 
 //weight sensor pins:
 const int HX711_dout = 45; //Connect dout of sensor to GPIO-2 of aries board
 const int HX711_sck = 44; //Connect dout of sensor to GPIO-3 of aries board
+
+// --- OLED config ---
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64      // change to 32 if you have a 128x32 display instead
+#define OLED_ADDR 0x3C        // common default - change if the scanner found a different address (e.g. 0x3D)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1); // -1 = no dedicated reset pin
+// -------------------
 
 // --- inventory calibration for THIS bin (fill these in) ---
 const float containerTareGrams = 55.89;   // weight of the empty reel/box, measured once
@@ -44,6 +55,7 @@ unsigned long t = 0;  // paces the load-cell debug print
 unsigned long lastSendTime = 0;
 const unsigned long sendInterval = 2000; // how often to push over Serial2
 float latestWeight = 0; // cached, updated by getSensorData() every loop pass
+long lastSentCount = -1;   // tracks previous "Sent" value so OLED can show + or - on change
 
 void hx711_setup() {
   float calibrationValue; // calibration value
@@ -138,12 +150,49 @@ float getSensorData() {
 //   return latestOtherValue;
 // }
 
+//OLED setup function
+void oled_setup() {
+  Wire.begin(); // master mode, default pins (SDA = pin 28, SCL = pin 29)
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+    Serial.println("SSD1306 not found - check wiring/address, or run the I2C scanner");
+    while (true) {
+      delay(1000);  // halt here rather than continue with a display that isn't there
+    }
+  }
+
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(10, 25);
+  display.println("Ready");
+  display.display();
+}
+
+void oled_showCount(long count) {
+  char symbol = ' ';   // no symbol on the very first reading - nothing to compare against yet
+
+  if (lastSentCount != -1) {
+    if (count > lastSentCount) symbol = '+';
+    else if (count < lastSentCount) symbol = '-';
+  }
+  lastSentCount = count;
+
+  display.clearDisplay();
+  display.setTextSize(4);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(60, 25);
+  if (symbol != ' ') display.print(symbol);
+  display.println(count);
+  display.display();
+}
 
 void setup() {
   Serial.begin(9600);   // matches Serial2's baud - required, see note above
   Serial2.begin(9600);  // UART link to NodeMCU
   Serial.println("\nMAX32630FTHR UART bridge starting...");
   hx711_setup();
+  oled_setup();
 
 }
 
@@ -160,6 +209,7 @@ void loop() {
 
     char msg[32];
     sprintf(msg, "%ld", pieceCount); // extend this line later to include other sensors
+    oled_showCount(pieceCount);
 
     Serial2.println(msg);
     Serial.print("Sent: ");
