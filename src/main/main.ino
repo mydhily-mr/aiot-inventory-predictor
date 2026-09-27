@@ -445,7 +445,8 @@ void sendBinMetadata() {
   Serial2.print(binPrice);          Serial2.print('|');
   Serial2.print(batchId);           Serial2.print('|');
   Serial2.print(batchFirstScanned); Serial2.print('|');
-  Serial2.println(batchInitialQty);
+  Serial2.print(batchInitialQty); Serial2.print('|');
+  Serial2.println(weightPerPiece);
 }
 
 void setup() {
@@ -480,8 +481,12 @@ void loop() {
     if (pieceCount < 0) pieceCount = 0;
     rygLed_update(pieceCount);
 
-    char msg[64];
-    sprintf(msg, "DATA|%s|%ld|%.1f|%ld", binId, pieceCount, latestDistanceCm, picksEstimatedTotal);
+    float netWeight = latestWeight - containerTareGrams; // subtract bin's own weight, so this is just the components
+    if (netWeight < 0) netWeight = 0;                     // clamp, same reasoning as pieceCount
+
+
+    char msg[80];
+    sprintf(msg, "DATA|%s|%ld|%.1f|%ld|%.2f", binId, pieceCount, latestDistanceCm, picksEstimatedTotal, netWeight);
     oled_showCount(pieceCount);
 
     Serial2.println(msg);

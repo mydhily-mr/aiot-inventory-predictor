@@ -1,24 +1,24 @@
 /*
- * NodeMCU <-> MAX32630FTHR <-> Firebase bridge (push-based, generic relay)
- *
- * MAX32630FTHR owns all the bin identity/metadata and decides what gets
- * written where - this sketch just parses two message types it receives
- * over MaxSerial and relays fields to Firebase. It doesn't know or care
- * what a "resistor" or "category" is.
- *
- *  META|<binId>|<name>|<category>|<department>|<unit>|<ratePerDay>|<supplier>|<price>|<batchId>|<firstScanned>|<initialQty>
- *    -> static bin info, sent once at boot + resent periodically as a safety net
- *  DATA|<binId>|<qty>|<distanceCm>|<picksEstimated>
- *    -> live values, sent every 2s. picksEstimated is a running total of
- *       estimated picks, derived on the MAX32630FTHR side by correlating
- *       IR hand-detection events with the load-cell weight drop.
- *
- * Wiring (unchanged from the original project):
- * NodeMCU D7 (GPIO13, RX) <- MAX32630FTHR P3_1 (Serial2 TX)
- * NodeMCU D8 (GPIO15, TX) -> MAX32630FTHR P3_0 (Serial2 RX) - unused by
- *   this simplified version, but fine to leave wired for future use
- * NodeMCU 3.3V -> MAX32630FTHR 3V3, NodeMCU GND -> MAX32630FTHR GND
- */
+   NodeMCU <-> MAX32630FTHR <-> Firebase bridge (push-based, generic relay)
+
+   MAX32630FTHR owns all the bin identity/metadata and decides what gets
+   written where - this sketch just parses two message types it receives
+   over MaxSerial and relays fields to Firebase. It doesn't know or care
+   what a "resistor" or "category" is.
+
+    META|<binId>|<name>|<category>|<department>|<unit>|<ratePerDay>|<supplier>|<price>|<batchId>|<firstScanned>|<initialQty>
+      -> static bin info, sent once at boot + resent periodically as a safety net
+    DATA|<binId>|<qty>|<distanceCm>|<picksEstimated>
+      -> live values, sent every 2s. picksEstimated is a running total of
+         estimated picks, derived on the MAX32630FTHR side by correlating
+         IR hand-detection events with the load-cell weight drop.
+
+   Wiring (unchanged from the original project):
+   NodeMCU D7 (GPIO13, RX) <- MAX32630FTHR P3_1 (Serial2 TX)
+   NodeMCU D8 (GPIO15, TX) -> MAX32630FTHR P3_0 (Serial2 RX) - unused by
+     this simplified version, but fine to leave wired for future use
+   NodeMCU 3.3V -> MAX32630FTHR 3V3, NodeMCU GND -> MAX32630FTHR GND
+*/
 
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -118,6 +118,22 @@ void handleMetadata(char *data) {
   char *batchId      = strtok(NULL, "|");
   char *firstScanned = strtok(NULL, "|");
   char *initialQty   = strtok(NULL, "|");
+  char *weightPerUnit = strtok(NULL, "|");
+
+  Serial.println("--- META fields parsed ---");
+  Serial.print("binId: "); Serial.println(binId ? binId : "(null)");
+  Serial.print("name: "); Serial.println(name ? name : "(null)");
+  Serial.print("category: "); Serial.println(category ? category : "(null)");
+  Serial.print("department: "); Serial.println(department ? department : "(null)");
+  Serial.print("unit: "); Serial.println(unit ? unit : "(null)");
+  Serial.print("ratePerDay: "); Serial.println(ratePerDay ? ratePerDay : "(null)");
+  Serial.print("supplier: "); Serial.println(supplier ? supplier : "(null)");
+  Serial.print("price: "); Serial.println(price ? price : "(null)");
+  Serial.print("batchId: "); Serial.println(batchId ? batchId : "(null)");
+  Serial.print("firstScanned: "); Serial.println(firstScanned ? firstScanned : "(null)");
+  Serial.print("initialQty: "); Serial.println(initialQty ? initialQty : "(null)");
+  Serial.print("weightPerUnit: "); Serial.println(weightPerUnit ? weightPerUnit : "(null)");
+  Serial.println("---------------------------");
 
   if (binId == NULL || batchId == NULL) {
     Serial.println("Malformed META line, skipping");
@@ -138,6 +154,9 @@ void handleMetadata(char *data) {
   sendToFirebase(base + "/batches/" + currentBatchId + "/id", "\"" + currentBatchId + "\"");
   sendToFirebase(base + "/batches/" + currentBatchId + "/firstScanned", "\"" + String(firstScanned) + "\"");
   sendToFirebase(base + "/batches/" + currentBatchId + "/initial", String(initialQty));
+  if (weightPerUnit != NULL) {
+    sendToFirebase(base + "/weightPerUnit", String(weightPerUnit));
+  }
 
   metadataReceived = true;
   Serial.println("Bin metadata written to Firebase");
@@ -148,6 +167,7 @@ void handleData(char *data) {
   char *qty        = strtok(NULL, "|");
   char *distanceCm = strtok(NULL, "|");
   char *picks      = strtok(NULL, "|");
+  char *totalWeight = strtok(NULL, "|");
 
   if (binId == NULL || qty == NULL) {
     Serial.println("Malformed DATA line, skipping");
@@ -167,6 +187,9 @@ void handleData(char *data) {
   }
   if (picks != NULL) {
     sendToFirebase(base + "/picksEstimated", String(picks));
+  }
+  if (totalWeight != NULL) {
+    sendToFirebase(base + "/totalWeightGrams", String(totalWeight));
   }
 }
 
