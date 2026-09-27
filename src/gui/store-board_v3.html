@@ -535,7 +535,7 @@
 const CONFIG = {
   useFirebase: true,
   firebaseConfig: {
-    apiKey: "AIzaSy...",
+    apiKey: "AIzaSyBcAgfsKraPC3NPQDBjfnRcQ842TIpuIQw",
     databaseURL: "https://aiot-inventory-predictor-default-rtdb.asia-southeast1.firebasedatabase.app/",
     projectId: "aiot-inventory-predictor",
   }
@@ -590,8 +590,19 @@ function computeStatus(days){ if(days<5) return 'crit'; if(days<14) return 'warn
 const statusStamp = { ok:['stamp-green','OK'], warn:['stamp-amber','Reorder soon'], crit:['stamp-red','Critical'] };
 function movementClass(days){ if(days<10) return 'fast'; if(days<=30) return 'moderate'; return 'slow'; }
 
+// function annotate(list){
+//   list.forEach(b=>{ b.days = +(b.qty/b.rate).toFixed(1); b.status = computeStatus(b.days); b.movement = movementClass(b.days); });
+//   return list;
+// }
+// annotate(bins);
+
 function annotate(list){
-  list.forEach(b=>{ b.days = +(b.qty/b.rate).toFixed(1); b.status = computeStatus(b.days); b.movement = movementClass(b.days); });
+  list.forEach(b=>{
+    b.days = +(b.qty/b.rate).toFixed(1); // always live - responds instantly as qty changes on the real sensor
+    b.status = computeStatus(b.days);
+    b.movement = movementClass(b.days);
+    b.aiForecast = !!(b.modelPrediction && b.modelPrediction.predicted_days_to_empty != null); // still flags AI-trained bins for the badge
+  });
   return list;
 }
 annotate(bins);
@@ -762,7 +773,7 @@ function renderGrid(){
       <div class="qty">${b.qty.toLocaleString()}</div>
       <div class="qty-unit">${b.unit} · ${b.supplier}</div>
       <div class="foot">
-        <span class="eta">${b.days}d left</span>
+        <span class="eta">${b.days}d left${b.aiForecast ? ' <b style="color:var(--accent)">· AI</b>' : ''}</span>
         <span class="stamp ${cls}">${label}</span>
       </div>
       ${flagged ? '<div class="fifo-flag">⚠ old batch unused</div>' : ''}
@@ -774,7 +785,8 @@ function renderGrid(){
 let chart;
 function buildSeries(b){
   const days=14, labels=[], observed=[], forecast=[];
-  const dailyLoss = b.rate;
+  const dailyLoss = (b.modelPrediction && b.modelPrediction.rate_g_per_day > 0) ? b.modelPrediction.rate_g_per_day : b.rate;
+  //const dailyLoss = b.rate;
   let w = b.qty + dailyLoss*days;
   for(let i=-days;i<=0;i++){
     labels.push(i===0?'Today':i+'d');
@@ -1331,14 +1343,50 @@ function initFirebase(){
     const db = firebase.database();
     dataSourceLabel = 'Connecting to live gateway…';
     document.getElementById('source-label').textContent = dataSourceLabel;
-    db.ref('bins').on('value', snap=>{
+    // db.ref('bins').on('value', snap=>{
+    //   const val = snap.val();
+    //   if(!val) return;
+    //   bins = annotate(Object.entries(val).map(([id,b])=>({ id, name:b.name, qty:b.qty, unit:b.unit||'pcs', rate:b.rate_per_day, supplier:b.supplier, category:b.category||'Uncategorized', department:b.department||'Unassigned', price:b.price||0, batches:b.batches||[] })));
+    //   dataSourceLabel = 'Live — gateway connected';
+    //   document.getElementById('sync-dot').classList.add('live');
+    //   renderAll(false);
+    // }, err=>{ console.error(err); dataSourceLabel='Live sync failed — showing demo data'; renderAll(false); });
+      db.ref('bins').on('value', snap=>{
       const val = snap.val();
       if(!val) return;
-      bins = annotate(Object.entries(val).map(([id,b])=>({ id, name:b.name, qty:b.qty, unit:b.unit||'pcs', rate:b.rate_per_day, supplier:b.supplier, category:b.category||'Uncategorized', department:b.department||'Unassigned', price:b.price||0, batches:b.batches||[] })));
-      dataSourceLabel = 'Live — gateway connected';
+
+      // Turn every real Firebase bin into its own card with its OWN
+      // name/id/values - nothing gets mirrored into unrelated demo
+      // bins anymore. If a real bin's id matches a demo bin's id it
+      // replaces that card; otherwise it's added as a new one (which
+      // is what happens with your real BIN-RYG-08 right now, since no
+      // demo bin shares that id).
+      const realBins = Object.entries(val).map(([id, b]) => ({
+        id,
+        name: b.name,
+        qty: b.qty,
+        unit: b.unit || 'pcs',
+        rate: b.rate_per_day,
+        supplier: b.supplier,
+        category: b.category || 'Uncategorized',
+        department: b.department || 'Unassigned',
+        price: b.price || 0,
+        batches: b.batches ? Object.values(b.batches) : [],
+        modelPrediction: b.model_prediction || null,
+      }));
+
+      const merged = [...demoBins];
+      realBins.forEach(real => {
+        const idx = merged.findIndex(x => x.id === real.id);
+        if (idx >= 0) merged[idx] = real; else merged.unshift(real);
+      });
+
+      bins = annotate(merged);
+      dataSourceLabel = 'Live — ' + realBins.length + ' real bin(s) connected';
       document.getElementById('sync-dot').classList.add('live');
       renderAll(false);
     }, err=>{ console.error(err); dataSourceLabel='Live sync failed — showing demo data'; renderAll(false); });
+    
     db.ref('shipments').on('value', snap=>{
       const val = snap.val();
       if(val){ shipments = Object.values(val); renderShipments(); renderScorecards(); }

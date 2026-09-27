@@ -30,12 +30,16 @@ NOISE = 0.15                       # +/- 15% jitter on each reading, like a real
 # ============================================
 
 # Same starting point as the dashboard's demo data, so the two line up visually.
+# BINS = {
+#     "BIN-R10K-08":   {"name": "10kΩ Resistor · 0805",        "unit": "pcs", "weight_g": 340, "qty": 8400, "rate_per_day": 300},
+#     "BIN-C100N-06":  {"name": "100nF Ceramic Cap · 0603",     "unit": "pcs", "weight_g": 28,  "qty": 1200, "rate_per_day": 260},
+#     "BIN-CONUSBC16": {"name": "USB-C Connector · 16-pin",     "unit": "pcs", "weight_g": 612, "qty": 340,  "rate_per_day": 40},
+#     "BIN-IC-M328P":  {"name": "ATmega328P · TQFP",            "unit": "pcs", "weight_g": 810, "qty": 900,  "rate_per_day": 15},
+#     "BIN-LED-R06":   {"name": "Red LED · 0603",                "unit": "pcs", "weight_g": 31,  "qty": 5200, "rate_per_day": 500},
+# }
+
 BINS = {
-    "BIN-R10K-08":   {"name": "10kΩ Resistor · 0805",        "unit": "pcs", "weight_g": 340, "qty": 8400, "rate_per_day": 300},
-    "BIN-C100N-06":  {"name": "100nF Ceramic Cap · 0603",     "unit": "pcs", "weight_g": 28,  "qty": 1200, "rate_per_day": 260},
-    "BIN-CONUSBC16": {"name": "USB-C Connector · 16-pin",     "unit": "pcs", "weight_g": 612, "qty": 340,  "rate_per_day": 40},
-    "BIN-IC-M328P":  {"name": "ATmega328P · TQFP",            "unit": "pcs", "weight_g": 810, "qty": 900,  "rate_per_day": 15},
-    "BIN-LED-R06":   {"name": "Red LED · 0603",                "unit": "pcs", "weight_g": 31,  "qty": 5200, "rate_per_day": 500},
+    "BIN-RYG-08": {"name": "RYG LED Sensor - 0805", "unit": "pcs", "weight_g": 42.6, "qty": 12, "rate_per_day": 6},
 }
 
 
