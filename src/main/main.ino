@@ -45,6 +45,26 @@
    GND          -   GND
    VCC          -   3V3
    SIG          -   P3_3
+
+ *     *** RYG LED (stock level indicator) ***
+   GND          -   GND
+   R            -   P5_0
+   Y            -   P5_1
+   G            -   P5_2
+   >50% of totalRygCount  -> Green solid
+   21-50%                 -> Yellow solid
+   <=20%                  -> Red solid
+
+ *     *** Piezo Buzzer (power-switched) ***
+   Buzzer VCC   -> Board 3V3
+   Buzzer GND   -> Transistor Collector
+   Buzzer SIG   -> Board GND (tied permanently low, not used for control)
+   Transistor Emitter -> Board GND
+   Transistor Base    -> 1k resistor -> P5_3
+   This module self-latches its internal oscillator on a SIG pulse and
+   won't stop from SIG alone - GPIO here instead switches power to it
+   via the transistor, which guarantees it turns off.
+   Beeps for 5s when stock level transitions into Red (<=20%).
 */
 
 
@@ -91,6 +111,25 @@ long picksEstimatedTotal = 0;   // cumulative estimated picks, derived from weig
 long lastPickQty = 0;           // most recent single pick's estimate - diagnostic only, not sent
 // -------------------------
 
+// --- RYG LED status indicator config ---
+#define LED_RED    P5_0
+#define LED_YELLOW P5_1
+#define LED_GREEN  P5_2
+
+const long totalRygCount = 12; // total capacity for this bin - fixed for now; make this user-configurable later if needed
+// -------------------------
+
+// --- Buzzer alert config ---
+#define BUZZER_PIN P5_3
+
+const unsigned long buzzerDurationMs = 5000; // how long to keep power on once triggered
+bool buzzerActive = false;
+unsigned long buzzerStartTime = 0;
+
+bool wasRed = false;       // tracks previous red state, so the buzzer fires only on entering red - not every cycle while it stays red
+bool currentlyRed = false; // set by rygLed_update(), read by buzzer_update()
+// -------------------------
+
 // --- Bin identity & metadata (edit per deployment - sent to NodeMCU, which relays to Firebase) ---
 const char* binId             = "BIN-RYG-08";
 const char* binName           = "RYG LED Sensor - 0805";   // avoid special chars like Omega/middot - keep ASCII
@@ -102,7 +141,7 @@ const char* binSupplier       = "Digikey";
 const float binPrice          = 0.4;
 const char* batchId           = "B-3301";
 const char* batchFirstScanned = "2026-07-20";
-const long  batchInitialQty   = 1200;
+const long  batchInitialQty   = 12;
 
 unsigned long lastMetadataSendTime = 0;
 const unsigned long metadataResendInterval = 30000; // resend periodically so NodeMCU catches it even if it missed the boot-time send
@@ -330,6 +369,70 @@ void pollPickEstimator() {
   }
 }
 
+void rygLed_setup() {
+  useVDDIOH(LED_RED);
+  useVDDIOH(LED_YELLOW);
+  useVDDIOH(LED_GREEN);
+
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_YELLOW, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_GREEN, LOW);
+}
+
+void rygLed_update(long count) {
+  float percentRemaining = (totalRygCount > 0) ? (100.0 * count / totalRygCount) : 0;
+
+  bool red = false, yellow = false, green = false;
+
+  if (percentRemaining <= 20.0) {
+    red = true;
+  } else if (percentRemaining <= 50.0) {
+    yellow = true;
+  } else {
+    green = true;
+  }
+
+  digitalWrite(LED_RED, red ? HIGH : LOW);
+  digitalWrite(LED_YELLOW, yellow ? HIGH : LOW);
+  digitalWrite(LED_GREEN, green ? HIGH : LOW);
+
+  currentlyRed = red;
+}
+
+void buzzer_setup() {
+  useVDDIOH(BUZZER_PIN);
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, HIGH); // HIGH = off, based on your wiring's actual behavior
+}
+
+void buzzer_start() {
+  buzzerActive = true;
+  buzzerStartTime = millis();
+  digitalWrite(BUZZER_PIN, LOW); // LOW = on, based on your wiring's actual behavior
+  Serial.println("Buzzer ON");
+}
+
+void buzzer_stop() {
+  buzzerActive = false;
+  digitalWrite(BUZZER_PIN, HIGH); // HIGH = off, based on your wiring's actual behavior
+  Serial.println("Buzzer OFF");
+}
+
+void buzzer_update(bool isRed) {
+  if (isRed && !wasRed && !buzzerActive) { // ignore re-triggers while a beep is already playing
+    buzzer_start();
+  }
+  wasRed = isRed;
+
+  if (buzzerActive && millis() - buzzerStartTime >= buzzerDurationMs) {
+    buzzer_stop();
+  }
+}
+
 void sendBinMetadata() {
   Serial2.print("META|");
   Serial2.print(binId);             Serial2.print('|');
@@ -353,6 +456,8 @@ void setup() {
   oled_setup();
   ultrasonic_setup();
   ir_setup();
+  rygLed_setup();
+  buzzer_setup();
   sendBinMetadata();
 }
 
@@ -361,6 +466,7 @@ void loop() {
   getSensorData();          // poll load cell - every pass, no delay
   getDistanceData();        // poll ultrasonic - self-gated to distanceReadInterval internally
   pollPickEstimator();      // self-debounced/self-timed internally, no delay needed
+  buzzer_update(currentlyRed); // checked every pass so the 5s cutoff stays precise
 
   if (millis() - lastMetadataSendTime >= metadataResendInterval) {
     lastMetadataSendTime = millis();
@@ -370,8 +476,9 @@ void loop() {
   if (millis() - lastSendTime >= sendInterval) {
     lastSendTime = millis();
 
-    long pieceCount = (long)((latestWeight - containerTareGrams) / weightPerPiece);
+    long pieceCount = (long)round((latestWeight - containerTareGrams) / weightPerPiece);
     if (pieceCount < 0) pieceCount = 0;
+    rygLed_update(pieceCount);
 
     char msg[64];
     sprintf(msg, "DATA|%s|%ld|%.1f|%ld", binId, pieceCount, latestDistanceCm, picksEstimatedTotal);

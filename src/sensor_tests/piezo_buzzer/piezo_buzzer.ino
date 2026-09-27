@@ -9,15 +9,22 @@
  */
 #define BUZZER_PIN P5_3
 
+// --- Buzzer alert config ---
+#define BUZZER_PIN P5_3
 void setup() {
+  Serial.begin(9600);
   useVDDIOH(BUZZER_PIN);
   pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+  delay(2000);
 }
 
 void loop() {
-  tone(BUZZER_PIN, 2000);  // 2kHz tone
-  delay(200);              // beep duration
-  noTone(BUZZER_PIN);
+  Serial.println("Buzzer ON");
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(5000);
 
-  delay(2000);             // gap before next beep
+  digitalWrite(BUZZER_PIN, LOW);
+  Serial.println("Buzzer OFF - should be dead silent now for 10s");
+  delay(10000); // long, obvious silent gap - listen closely here
 }
