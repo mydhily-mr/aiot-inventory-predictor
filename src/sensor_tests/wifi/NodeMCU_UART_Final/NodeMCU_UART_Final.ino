@@ -1,19 +1,19 @@
 /*
- * NodeMCU <-> MAX32630FTHR <-> Firebase bridge (simplified, push-based)
- *
- * MAX32630FTHR pushes a fresh reading every 2 seconds, unprompted -
- * this sketch just listens continuously and relays whatever arrives to
- * Firebase. No "Start" request, no waiting for available() > 0 before
- * speaking - that pattern could deadlock if both sides ended up waiting
- * on each other; this version can't, since NodeMCU never needs to send
- * anything to keep the exchange going.
- *
- * Wiring (unchanged from the original project):
- * NodeMCU D7 (GPIO13, RX) <- MAX32630FTHR P3_1 (Serial2 TX)
- * NodeMCU D8 (GPIO15, TX) -> MAX32630FTHR P3_0 (Serial2 RX) - unused by
- *   this simplified version, but fine to leave wired for future use
- * NodeMCU 3.3V -> MAX32630FTHR 3V3, NodeMCU GND -> MAX32630FTHR GND
- */
+   NodeMCU <-> MAX32630FTHR <-> Firebase bridge (simplified, push-based)
+
+   MAX32630FTHR pushes a fresh reading every 2 seconds, unprompted -
+   this sketch just listens continuously and relays whatever arrives to
+   Firebase. No "Start" request, no waiting for available() > 0 before
+   speaking - that pattern could deadlock if both sides ended up waiting
+   on each other; this version can't, since NodeMCU never needs to send
+   anything to keep the exchange going.
+
+   Wiring (unchanged from the original project):
+   NodeMCU D7 (GPIO13, RX) <- MAX32630FTHR P3_1 (Serial2 TX)
+   NodeMCU D8 (GPIO15, TX) -> MAX32630FTHR P3_0 (Serial2 RX) - unused by
+     this simplified version, but fine to leave wired for future use
+   NodeMCU 3.3V -> MAX32630FTHR 3V3, NodeMCU GND -> MAX32630FTHR GND
+*/
 
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -124,7 +124,17 @@ void loop() {
       Serial.print("Received from MAX32630FTHR: ");
       Serial.println(rxBuffer);
 
-      sendToFirebase("SensorValue", String(rxBuffer));
+      // rxBuffer format: "<pieceCount>,<distanceCm>" e.g. "20,15.3"
+      char *countStr = strtok(rxBuffer, ",");
+      char *distStr  = strtok(NULL, ",");
+      
+      if (countStr != NULL) {
+        sendToFirebase("SensorValue", String(countStr));
+      }
+      if (distStr != NULL) {
+        sendToFirebase("DistanceCm", String(distStr));
+      }
+
       sendToFirebase("Event", String(eventCounter));
       eventCounter++;
     } else {

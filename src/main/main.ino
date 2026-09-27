@@ -30,6 +30,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+#define TRIG_PIN P5_6 //ultrasonic senosr trigger pin
+#define ECHO_PIN P4_0 //ultrasonic senosr echo pin
 
 //weight sensor pins:
 const int HX711_dout = 45; //Connect dout of sensor to GPIO-2 of aries board
@@ -41,6 +43,12 @@ const int HX711_sck = 44; //Connect dout of sensor to GPIO-3 of aries board
 #define OLED_ADDR 0x3C        // common default - change if the scanner found a different address (e.g. 0x3D)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1); // -1 = no dedicated reset pin
 // -------------------
+
+// --- Ultrasonic (HC-SR04) config ---
+unsigned long lastDistanceReadTime = 0;
+const unsigned long distanceReadInterval = 1000; // how often to trigger a new distance reading (ms)
+float latestDistanceCm = 0; // cached, updated by getDistanceData()
+// ------------------------------------
 
 // --- inventory calibration for THIS bin (fill these in) ---
 const float containerTareGrams = 55.89;   // weight of the empty reel/box, measured once
@@ -187,18 +195,58 @@ void oled_showCount(long count) {
   display.display();
 }
 
+//Ultra sonic sensor setup
+void ultrasonic_setup() {
+  useVDDIOH(TRIG_PIN);
+  useVDDIOH(ECHO_PIN);
+
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  digitalWrite(TRIG_PIN, LOW);
+}
+
+float getDistanceData() {
+  if (millis() - lastDistanceReadTime >= distanceReadInterval) {
+    lastDistanceReadTime = millis();
+
+    // Send a 10us trigger pulse
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    // Measure echo pulse width (timeout ~25ms ≈ 4m range, avoids hanging if no echo)
+    long duration = pulseIn(ECHO_PIN, HIGH, 25000);
+
+    if (duration > 0) {
+      // distance(cm) = duration(us) / 58  →  speed of sound ≈ 343 m/s
+      latestDistanceCm = duration / 58.0;
+      Serial.print("Distance: ");
+      Serial.print(latestDistanceCm);
+      Serial.println(" cm");
+    } else {
+      Serial.println("No echo received (out of range or no object)");
+    }
+  }
+
+  return latestDistanceCm;
+}
+
 void setup() {
   Serial.begin(9600);   // matches Serial2's baud - required, see note above
   Serial2.begin(9600);  // UART link to NodeMCU
   Serial.println("\nMAX32630FTHR UART bridge starting...");
   hx711_setup();
   oled_setup();
-
+  ultrasonic_setup();
 }
 
 
 void loop() {
   getSensorData();          // poll load cell - every pass, no delay
+  getDistanceData();    //poll ultrasonic sensor for distance
   // getOtherSensorData();  // <- next sensor goes here, same way
 
   if (millis() - lastSendTime >= sendInterval) {
@@ -208,7 +256,8 @@ void loop() {
     if (pieceCount < 0) pieceCount = 0;
 
     char msg[32];
-    sprintf(msg, "%ld", pieceCount); // extend this line later to include other sensors
+    sprintf(msg, "%ld,%.1f", pieceCount, latestDistanceCm); // format: pieceCount,distanceCm
+    //sprintf(msg, "%ld", pieceCount); // extend this line later to include other sensors
     oled_showCount(pieceCount);
 
     Serial2.println(msg);
