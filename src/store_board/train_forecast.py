@@ -75,39 +75,46 @@ def fetch_history(bin_id: str) -> pd.DataFrame:
     return df
 
 
-def train_and_predict(df: pd.DataFrame) -> dict | None:
+def train_and_predict(df: pd.DataFrame, net_weight_g=None) -> dict | None:
     if len(df) < MIN_POINTS_TO_TRAIN:
         return None
 
-    X = df[["ts"]].values
-    y = df["weight_g"].values
+    # Train only on the stretch since the last refill (weight jumping UP by >5 g),
+    # so an old refill doesn't flatten the slope.
+    w = df["weight_g"].values
+    jumps = [i for i in range(1, len(w)) if w[i] - w[i - 1] > 5]
+    recent = df.iloc[jumps[-1]:] if jumps else df
+    if len(recent) < MIN_POINTS_TO_TRAIN:
+        recent = df.tail(MIN_POINTS_TO_TRAIN)
+
+    X = recent[["ts"]].values
+    y = recent["weight_g"].values
 
     model = LinearRegression()
     model.fit(X, y)
     r_squared = model.score(X, y)
 
-    slope_per_sec = model.coef_[0]          # grams lost per second (negative = depleting)
-    current_weight = y[-1]
-    current_ts = X[-1][0]
+    slope_per_sec = model.coef_[0]          # grams per second (negative = depleting)
+    # The slope is learned from history; the starting point is the LIVE net stock weight
+    # (the same value the GUI shows), not the container-inclusive weight_g.
+    current_weight = net_weight_g if net_weight_g is not None else y[-1]
 
     if slope_per_sec >= 0:
-        # not depleting (or noisy/flat) — no meaningful forecast yet
         return {
             "rate_g_per_day": 0,
             "predicted_days_to_empty": None,
             "r_squared": round(r_squared, 3),
-            "trained_on_points": len(df),
+            "trained_on_points": len(recent),
         }
 
     rate_g_per_day = abs(slope_per_sec) * 86400
-    seconds_to_empty = current_weight / abs(slope_per_sec)
-    days_to_empty = round(seconds_to_empty / 86400, 1)
+    days_to_empty = round(current_weight / rate_g_per_day, 1)
 
     return {
         "rate_g_per_day": round(rate_g_per_day, 2),
         "predicted_days_to_empty": days_to_empty,
         "r_squared": round(r_squared, 3),
-        "trained_on_points": len(df),
+        "trained_on_points": len(recent),
     }
 
 
@@ -129,6 +136,7 @@ def fetch_bin_config(bin_id: str) -> dict:
         "reorder_lead_days": data.get("reorder_lead_days", DEFAULT_REORDER_LEAD_DAYS),
         "reorder_buffer_days": data.get("reorder_buffer_days", DEFAULT_REORDER_BUFFER_DAYS),
         "last_alert_sent": data.get("last_alert_sent"),  # unix timestamp or None
+        "net_weight_g": data.get("totalWeightGrams"),   # real stock weight, same source as GUI qty
     }
 
 
@@ -224,7 +232,8 @@ def main():
     print(f"Found {len(bin_ids)} bin(s). Training...\n")
     for bin_id in bin_ids:
         df = fetch_history(bin_id)
-        prediction = train_and_predict(df)
+        config = fetch_bin_config(bin_id)
+        prediction = train_and_predict(df, config["net_weight_g"])
 
         if prediction is None:
             print(f"  {bin_id:<16} only {len(df)} point(s) logged — need "
@@ -238,7 +247,7 @@ def main():
               f"forecast={eta_str:<10} fit(R²)={prediction['r_squared']}  "
               f"(n={prediction['trained_on_points']})")
 
-        config = fetch_bin_config(bin_id)
+        #config = fetch_bin_config(bin_id)
         if should_alert(eta, config):
             print(f"    -> below reorder threshold "
                   f"({config['reorder_lead_days']}+{config['reorder_buffer_days']}d) — alerting")
