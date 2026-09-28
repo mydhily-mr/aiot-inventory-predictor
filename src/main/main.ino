@@ -133,7 +133,7 @@ bool currentlyRed = false; // set by rygLed_update(), read by buzzer_update()
 // --- Bin identity & metadata (edit per deployment - sent to NodeMCU, which relays to Firebase) ---
 const char* binId             = "BIN-RYG-08";
 const char* binName           = "RYG LED Sensor - 0805";   // avoid special chars like Omega/middot - keep ASCII
-const char* binCategory       = "Sensors";
+const char* binCategory       = "LEDs";
 const char* binDepartment     = "Assembly";
 const char* binUnit           = "pcs";
 const int   binRatePerDay     = 3;
