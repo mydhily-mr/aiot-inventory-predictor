@@ -1,4 +1,4 @@
-# AI-Based Predictive Inventory Management System (PIMS)
+# PRISM (Predictive Replenishment & Inventory Stock Monitoring)
 
 Manufacturing industries often face production delays due to inaccurate inventory monitoring, unexpected stock shortages, delayed procurement, and inefficient manual inventory management. Most existing inventory systems only notify users after stock levels become critically low, leaving insufficient time to procure replacement materials. 
 
