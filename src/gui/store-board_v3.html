@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AIPMS — AIoT Inventory Management</title>
+<title>PRISM — Predictive Replenishment & Inventory Stock Monitoring</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -270,10 +270,10 @@
   <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar">
     <div class="logo">
-      <div class="mark">AI</div>
+      <div class="mark">PR</div>
       <div>
-        <div class="name">AIPMS</div>
-        <div class="sub">AIoT Inventory Mgmt</div>
+        <div class="name">PRISM</div>
+        <div class="sub">Predictive Inventory</div>
       </div>
     </div>
 
@@ -477,8 +477,7 @@
 </div>
 
 <footer>
-  <strong>Note:</strong> quantity figures are simulated demo data until the AIoT gateway (board → cloud) is wired to the same Firebase feed the sensors will write to. Invoice PDFs are read locally in the browser with pdf.js (no AI, nothing leaves the page); because invoice layouts vary, the auto-filled fields are best-effort guesses — always check them in the review popup before saving. The "Estimated" courier timeline is derived from each courier's historical average lead time, not a live scan; the "Check live status ↗" link on each shipment opens the courier's own tracking page for the real, current status. Wiring in a courier's official tracking API would need a business/API account with that courier plus a small backend to call it from (browsers can't call most courier APIs directly).
-</footer>
+  <strong>PRISM</strong> -Predictive Replenishment & Inventory Stock Monitoring
 
 <div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target===this) closeModal()">
   <div class="modal">

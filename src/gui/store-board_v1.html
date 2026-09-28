@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AIPMS — AIoT Inventory Management</title>
+<title>PRISM — Predictive Replenishment & Inventory Stock Monitoring</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -250,8 +250,8 @@
     <div class="logo">
       <div class="mark">AI</div>
       <div>
-        <div class="name">AIPMS</div>
-        <div class="sub">AIoT Inventory Mgmt</div>
+        <div class="name">PRISM</div>
+        <div class="sub">Predictive Inventory</div>
       </div>
     </div>
 
@@ -453,7 +453,7 @@
 </div>
 
 <footer>
-  <strong>Note:</strong> quantity figures are simulated demo data until the AIoT gateway (board → cloud) is wired to the same Firebase feed the sensors will write to. Courier tracking stages are estimated from each courier's historical average lead time and a tracking-number prefix guess — connecting a real courier API would replace the estimate with live scans. Invoice reading calls Claude directly from this page, which works inside Claude.ai; once you host this file on your own domain, route that call through your own small backend holding an Anthropic API key rather than calling it from the browser.
+  <strong>PRISM:</strong> quantity figures are simulated demo data until the AIoT gateway (board → cloud) is wired to the same Firebase feed the sensors will write to. Courier tracking stages are estimated from each courier's historical average lead time and a tracking-number prefix guess — connecting a real courier API would replace the estimate with live scans. Invoice reading calls Claude directly from this page, which works inside Claude.ai; once you host this file on your own domain, route that call through your own small backend holding an Anthropic API key rather than calling it from the browser.
 </footer>
 
 <div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target===this) closeModal()">
