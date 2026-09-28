@@ -3,9 +3,13 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
+concurrency:
+  group: forecast
+  cancel-in-progress: false
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: src/store_board
@@ -15,6 +19,17 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install requests pandas scikit-learn
-      - run: python -c "import train_forecast; train_forecast.main()"
+      - name: Check 3 times, 2 minutes apart
         env:
           ALERT_EMAIL_APP_PASSWORD: ${{ secrets.ALERT_EMAIL_APP_PASSWORD }}
+        run: |
+          python - <<'EOF'
+          import time, train_forecast
+          for i in range(3):
+              try:
+                  train_forecast.main()
+              except Exception as e:
+                  print("run failed:", e)
+              if i < 2:
+                  time.sleep(120)
+          EOF

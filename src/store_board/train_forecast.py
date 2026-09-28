@@ -39,7 +39,7 @@ DEFAULT_REORDER_BUFFER_DAYS = 2
 # How long to wait before re-sending an alert for the same bin, so it doesn't
 # email/message you again every single time this script runs while still critical.
 #ALERT_COOLDOWN_HOURS = 1 / 60   # 1 minute for demo purpose
-ALERT_COOLDOWN_HOURS = 0.25   # 15 min for demo (the schedule runs every 5 min)
+ALERT_COOLDOWN_HOURS = 1.5 / 60   # 1.5 minutes
 
 # Leave EMAIL_ENABLED as False until you've set up an app password — the
 # script runs fine without it, it just won't send anything.
