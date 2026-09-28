@@ -18,6 +18,7 @@ Setup:
 """
 
 import time
+import os
 import smtplib
 from email.mime.text import MIMEText
 from urllib.parse import quote
@@ -37,14 +38,15 @@ DEFAULT_REORDER_BUFFER_DAYS = 2
 
 # How long to wait before re-sending an alert for the same bin, so it doesn't
 # email/message you again every single time this script runs while still critical.
-ALERT_COOLDOWN_HOURS = 24
+#ALERT_COOLDOWN_HOURS = 1 / 60   # 1 minute for demo purpose
+ALERT_COOLDOWN_HOURS = 0.25   # 15 min for demo (the schedule runs every 5 min)
 
 # Leave EMAIL_ENABLED as False until you've set up an app password — the
 # script runs fine without it, it just won't send anything.
-EMAIL_ENABLED = False
-EMAIL_FROM = "aXXXXXXXXX@gmail.com"
-EMAIL_APP_PASSWORD = "xxxx xxxx xxxx xxxx"   # not your normal password — see note below
-EMAIL_TO = "1XXXXXXX@gmail.com"
+EMAIL_ENABLED = True
+EMAIL_FROM = "arshikrishna3737@gmail.com"
+EMAIL_APP_PASSWORD = os.environ.get("ALERT_EMAIL_APP_PASSWORD", "")   # not your normal password — see note below
+EMAIL_TO = "137mydhily@gmail.com"
 
 # WhatsApp via CallMeBot (free, personal-use). Get your API key by messaging
 # the bot first — see the setup steps in the project README.
