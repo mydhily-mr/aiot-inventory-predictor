@@ -33,8 +33,8 @@ MIN_POINTS_TO_TRAIN = 10   # don't trust a regression fit on fewer points than t
 # Per-bin defaults if a bin doesn't specify its own in Firebase.
 # lead_time: how many days it actually takes to get a reorder delivered.
 # buffer: extra safety margin on top of lead time before you'd want the alert.
-DEFAULT_REORDER_LEAD_DAYS = 3
-DEFAULT_REORDER_BUFFER_DAYS = 2
+DEFAULT_REORDER_LEAD_DAYS = 2
+DEFAULT_REORDER_BUFFER_DAYS = 1
 
 # How long to wait before re-sending an alert for the same bin, so it doesn't
 # email/message you again every single time this script runs while still critical.
