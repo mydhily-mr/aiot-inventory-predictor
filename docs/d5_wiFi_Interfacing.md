@@ -82,7 +82,4 @@ described in issue #2 above.
  ![wifi firebase](../images/wifi_2.png)— Click on Install and wait for the installation to be completed.
 
 
-### Coming Next...
-- **I2C integration (Grove Vision AI Module V2)** was designed and discussed
-  as a next step, but not yet implemented or tested — it would sit on a
-  separate I2C bus from this UART link, with MAX32630FTHR as I2C master.
+

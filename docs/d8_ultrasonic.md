@@ -1,6 +1,6 @@
 # Individual Sensor Testing
 
-# HX711 Weight Sensor
+# Ultrasonic with MAX32630fthr
 
 ### Goal
 
@@ -21,7 +21,7 @@ Interfacing SSD1306 Oled display with MAX32630fthr board.
   ![wifi serial monitor](../images/ultra_sc.png)— Ultrasonic Connection.
 
 **Code Snippet:**
- ![wifi serial monitor](../images/ultra_code.png)— Ultrasonic
+ ![wifi serial monitor](../images/ul.png)— Ultrasonic
 ## Output:
-![wifi serial monitor](../images/ultra_code.png)— Ultrasonic
+![wifi serial monitor](../images/ul.png) — Ultrasonic
 
