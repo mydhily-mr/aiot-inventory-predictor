@@ -4,7 +4,7 @@
 
 | S. No. | Name | Role / Contribution | Contact (Optional) |
 |---|---|---|---|
-| 1. | Mydhily M R | Team lead: hardware, MAX32630FTHR firmware, NodeMCU gateway, Firebase, dashboard, AI forecasting | +91 7034710672<br>[mydhily@cdac.in](mailto:mydhily@cdac.in)<br>[mydhily37@gmail.com](mailto:mydhily37@gmail.com) |
+| 1. | Mydhily | Team lead: hardware, MAX32630FTHR firmware, NodeMCU gateway, Firebase, dashboard, AI forecasting |  -<br>[-](mailto:-)<br>[-](mailto:-) |
 
 ## Project Checklist
 
@@ -29,7 +29,7 @@
 
 ## Cover Image:
 
-![Figure 1: Cover image – three PRISM units showing green, yellow and red stock levels](images/1.png)
+![Figure 1: Cover image – three PRISM units showing green, yellow and red stock levels](../images/template_pics/1.png)
 
 ## Video:
 
@@ -56,7 +56,7 @@ DigiKey MyList (BOM): **[MyList link Click here](https://www.digikey.in/en/mylis
 | 13 | Soldering ion | 1 | Datasheet Link | Link to Buy |
 | 14 | RYG LED | 14 | | |
 
-[![Figure 2: DigiKey MyList (BOM) – list of project components](images/2.png)](https://www.digikey.in/en/mylists/list/48SZ6VB09U)
+[![Figure 2: DigiKey MyList (BOM) – list of project components](../images/template_pics/2.png)](https://www.digikey.in/en/mylists/list/48SZ6VB09U)
 
 **Click on Any Product** To Open List
 

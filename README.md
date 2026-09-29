@@ -2,7 +2,7 @@
 
 **PRISM predicts what you're about to run out of, before you run out.**
 
-![PRISM – three units showing green, yellow and red stock levels](images/1.png)
+![PRISM – three units showing green, yellow and red stock levels](images/template_pics/1.png)
 
 📺 **Demo video:** [youtu.be/odlPvgT5Zeg](https://youtu.be/odlPvgT5Zeg?si=Ek_2I9EwPxp-R_3K)  
 📖 **Full build write-up:** [PROJECT_DETAILS.md](PROJECT_DETAILS.md)  
@@ -48,7 +48,7 @@ The aim is to know how much stock is left, and also when it is going to run out.
 Inventory → Sensors → MAX32630FTHR → NodeMCU Wi-Fi → Firebase → Dashboard → Prediction → Email Alert
 ```
 
-![PRISM system concept](images/9.png)
+![PRISM system concept](images/template_pics/64.png)
 
 ### Stock Level Indication
 
@@ -94,7 +94,7 @@ Count estimate: **Number of pieces = (Measured Weight − Empty Tray Weight) / W
 
 Load cell → HX711: Red → E+, Black → E−, Green → A+, White → A−
 
-![Schematic](images/100.png)
+![Schematic](images/prism-schematic.png)
 
 ## Tech Stack
 
@@ -121,7 +121,10 @@ See [PROJECT_DETAILS.md](PROJECT_DETAILS.md) for the complete step-by-step build
 
 ## Dashboard
 
-![Inventory Overview dashboard](images/78.png)
+![Inventory Overview dashboard](images/template_pics/64.png)
+![Inventory Overview dashboard](images/template_pics/65.png)
+![Inventory Overview dashboard](images/template_pics/66.png)
+
 
 ## Project Status
 
