@@ -2,6 +2,8 @@
 
 ## GUI set up
 <!-- **15/08/2026** -->
+ ![gui Console](../images/64.png) 
+
 
 
 ## Required Softwares

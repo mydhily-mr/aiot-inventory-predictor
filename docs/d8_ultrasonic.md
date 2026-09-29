@@ -15,18 +15,13 @@ Interfacing SSD1306 Oled display with MAX32630fthr board.
 |---|---|
 | GND   | GND |
 | VCC   | 3V3 |
-| SDA    | P3_4 (pin 28 in software) |
-| SCL    | P3_5 (pin 29 in software) |
+| TRIG    | P5_6  |
+| ECHO    | P4_0  |
 
-  ![wifi serial monitor](../images/d7_oled.PNG)— OLED display Connection.
+  ![wifi serial monitor](../images/ultra_sc.png)— Ultrasonic Connection.
 
 **Code Snippet:**
- ![wifi serial monitor](../images/d7_oled2.png)— Oled display
+ ![wifi serial monitor](../images/ultra_code.png)— Ultrasonic
 ## Output:
+![wifi serial monitor](../images/ultra_code.png)— Ultrasonic
 
-  ![wifi serial monitor](../images/d7_out.jpeg)— OLED output
-
-### Coming Next...
-- **I2C integration (Grove Vision AI Module V2)** was designed and discussed
-  as a next step, but not yet implemented or tested — it would sit on a
-  separate I2C bus from this UART link, with MAX32630FTHR as I2C master.

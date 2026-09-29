@@ -34,7 +34,3 @@ Interfacing HX711 weight sensor with MAX32630fthr board.
   ![wifi serial monitor](../images/weight_output3.png)— weight_sensor  output for objects with unknown weights.
 
 
-### Coming Next...
-- **I2C integration (Grove Vision AI Module V2)** was designed and discussed
-  as a next step, but not yet implemented or tested — it would sit on a
-  separate I2C bus from this UART link, with MAX32630FTHR as I2C master.
