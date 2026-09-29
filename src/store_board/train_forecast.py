@@ -29,6 +29,7 @@ from sklearn.linear_model import LinearRegression
 # ================= CONFIG =================
 FIREBASE_DB_URL = "https://aiot-inventory-predictor-default-rtdb.asia-southeast1.firebasedatabase.app/"
 MIN_POINTS_TO_TRAIN = 10   # don't trust a regression fit on fewer points than this
+MIN_SPAN_DAYS = 0.5   # history must cover at least 12 hours before the model is trusted
 
 # Per-bin defaults if a bin doesn't specify its own in Firebase.
 # lead_time: how many days it actually takes to get a reorder delivered.
@@ -86,6 +87,10 @@ def train_and_predict(df: pd.DataFrame, net_weight_g=None) -> dict | None:
     recent = df.iloc[jumps[-1]:] if jumps else df
     if len(recent) < MIN_POINTS_TO_TRAIN:
         recent = df.tail(MIN_POINTS_TO_TRAIN)
+    
+    span_days = (recent["ts"].iloc[-1] - recent["ts"].iloc[0]) / 86400
+    if span_days < MIN_SPAN_DAYS:
+        return None   # too short a window to extrapolate to days
 
     X = recent[["ts"]].values
     y = recent["weight_g"].values
@@ -137,8 +142,16 @@ def fetch_bin_config(bin_id: str) -> dict:
         "reorder_buffer_days": data.get("reorder_buffer_days", DEFAULT_REORDER_BUFFER_DAYS),
         "last_alert_sent": data.get("last_alert_sent"),  # unix timestamp or None
         "net_weight_g": data.get("totalWeightGrams"),   # real stock weight, same source as GUI qty
-    }
+        "qty": data.get("qty"),
+        "rate_per_day": data.get("rate_per_day"),
+    }   
 
+def dashboard_days_left(config: dict):
+    """Same number the dashboard shows: qty / rate_per_day."""
+    qty, rate = config.get("qty"), config.get("rate_per_day")
+    if qty is None or not rate:
+        return None
+    return round(qty / rate, 1)
 
 def should_alert(days_to_empty, config: dict) -> bool:
     if days_to_empty is None:
@@ -237,10 +250,11 @@ def main():
 
         if prediction is None:
             print(f"  {bin_id:<16} only {len(df)} point(s) logged — need "
-                  f"{MIN_POINTS_TO_TRAIN} to train. Let the gateway run longer.")
-            continue
-
-        push_prediction(bin_id, prediction)
+                  f"{MIN_POINTS_TO_TRAIN} points over {MIN_SPAN_DAYS} day(s) to train the AI model; using live dashboard value for alerts.")
+            prediction = {"rate_g_per_day": 0, "predicted_days_to_empty": None,
+                          "r_squared": None, "trained_on_points": len(df)}
+        else:
+            push_prediction(bin_id, prediction)
         eta = prediction["predicted_days_to_empty"]
         eta_str = f"{eta}d" if eta is not None else "n/a (not depleting)"
         print(f"  {bin_id:<16} rate={prediction['rate_g_per_day']:>6.1f} g/day  "
@@ -248,11 +262,16 @@ def main():
               f"(n={prediction['trained_on_points']})")
 
         #config = fetch_bin_config(bin_id)
-        if should_alert(eta, config):
-            print(f"    -> below reorder threshold "
-                  f"({config['reorder_lead_days']}+{config['reorder_buffer_days']}d) — alerting")
-            email_sent = send_reorder_email(bin_id, config, prediction)
-            whatsapp_sent = send_whatsapp_alert(bin_id, config, prediction)
+        dash_days = dashboard_days_left(config)
+        candidates = [d for d in (eta, dash_days) if d is not None]
+        alert_days = min(candidates) if candidates else None   # alert on whichever is lower
+
+        if should_alert(alert_days, config):
+            print(f"    -> {alert_days}d left (AI model: {eta}, dashboard: {dash_days}) is below "
+                  f"reorder threshold ({config['reorder_lead_days']}+{config['reorder_buffer_days']}d) — alerting")
+            alert_info = {**prediction, "predicted_days_to_empty": alert_days}
+            email_sent = send_reorder_email(bin_id, config, alert_info)
+            whatsapp_sent = send_whatsapp_alert(bin_id, config, alert_info)
             if email_sent or whatsapp_sent:
                 mark_alert_sent(bin_id)
                 channels = ", ".join(c for c, ok in
@@ -262,5 +281,12 @@ def main():
     print("\nPredictions written to /bins/{id}/model_prediction in Firebase.")
 
 
+CHECK_INTERVAL_SECONDS = 120
+
 if __name__ == "__main__":
-    main()
+    while True:
+        try:
+            main()
+        except Exception as e:
+            print(f"[!] Run failed: {e}")
+        time.sleep(CHECK_INTERVAL_SECONDS)
