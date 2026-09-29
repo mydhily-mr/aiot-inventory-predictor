@@ -1,6 +1,6 @@
 # Individual Sensor Testing
 
-# HX711 Weight Sensor
+# OLED Display with MAX32630FTHR Board
 
 ### Goal
 

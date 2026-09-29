@@ -6,10 +6,6 @@
 
 Interfacing Camera Module  with MAX32630fthr board.
 
-### Final working setup
-
-**Hardware:** MAX32630FTHR, Raspberry Pi Camera Module, Grove Vision AI Module v2
-
 
 **Schematic:**
  ![ryg led](../images/ryg.png)— RYG
@@ -26,10 +22,9 @@ Interfacing Camera Module  with MAX32630fthr board.
 
 **Code Snippet:**
  ![ryg led](../images/ryg_code.png)— RYG
-## Output:
 
- ## Demo
+ ## Output
 
-![RYG LED Detection](images/rygled.gif)
+![RYG](../images/ryg_sc.png)— RYG
 
 

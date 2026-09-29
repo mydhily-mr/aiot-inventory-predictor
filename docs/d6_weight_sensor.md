@@ -1,6 +1,6 @@
 # Individual Sensor Testing
 
-# HX711 Weight Sensor
+# HX711 Weight Sensor with MAX32630FTHR board
 
 ### Goal
 
