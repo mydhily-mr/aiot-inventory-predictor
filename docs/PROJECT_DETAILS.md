@@ -330,29 +330,29 @@ Individual sensor testing became the single most time-consuming phase of the pro
 
 For example, In Wi-Fi communication, I used UART and encountered clock-related and power related issues when working with different baud rates. The OLED display introduced another major challenge because of compatibility issues in the Wire library. I had to investigate the Wire driver, identify the issue, and modify the library to get the OLED working correctly with my setup. Since the issue appeared to be related to the MAX32630 Arduino environment, I also attempted to contribute my fix to the official MAX32630 Arduino repository.
 
-![Figure 21: Pull request "fix-wire-setclock-link-error" submitted to the official MAX32630 Arduino repository](images/template_pics/21.png)
+![Figure 21: Pull request "fix-wire-setclock-link-error" submitted to the official MAX32630 Arduino repository](../images/template_pics/21.png)
 
 Although I am not completely certain that my modification is the correct or final solution for all configurations, it resolved the issue in my setup, and I submitted the changes to the official repository so that the issue and potential fix could be reviewed by the maintainers. I also documented the issue and my changes on the relevant official project page.
 
-![Figure 22: OLED display test showing "Hello World"](images/template_pics/22.png)
+![Figure 22: OLED display test showing "Hello World"](../images/template_pics/22.jpeg)
 
-![Figure 23: RYG LED test setup on breadboard](images/template_pics/23.png)
+![Figure 23: RYG LED test setup on breadboard](../images/template_pics/23.jpeg)
 
 This debugging phase significantly reduced the time available for the remaining stages of the project. Tasks that were originally planned for system integration and higher-level functionality had to be pushed later because the individual components first had to be made stable. In practical terms, almost half of the project schedule was spent not on building the final system, but on making the individual sensors and their supporting libraries work correctly with the MAX32630.
 
 Despite this setback, I eventually got all the individual sensors working successfully. More importantly, the process gave me a much better understanding of the MAX32630 platform, its peripheral interfaces, clock configuration, and the challenges involved in adapting existing Arduino libraries to a new hardware platform. Once the individual components were validated, I could proceed with system integration on a much more stable foundation.
 
-![Figure 24: Individual sensor testing – ultrasonic sensor, RYG LED and load cell setup](images/template_pics/24.png)
+![Figure 24: Individual sensor testing – ultrasonic sensor, RYG LED and load cell setup](../images/template_pics/24.png)
 
-![Figure 25: Individual sensor testing – breadboard setup 1](images/template_pics/25.png)
+![Figure 25: Individual sensor testing – breadboard setup 1](../images/template_pics/25.png)
 
-![Figure 26: Individual sensor testing – breadboard setup 2](images/template_pics/26.png)
+![Figure 26: Individual sensor testing – breadboard setup 2](../images/template_pics/26.png)
 
-![Figure 27: Individual sensor testing – breadboard setup 3](images/template_pics/27.png)
+![Figure 27: Individual sensor testing – breadboard setup 3](../images/template_pics/27.png)
 
-![Figure 28: Individual sensor testing – breadboard setup with OLED](images/template_pics/28.png)
+![Figure 28: Individual sensor testing – breadboard setup with OLED](../images/template_pics/28.png)
 
-![Figure 29: Individual sensor testing – breadboard setup with Wi-Fi module](images/template_pics/29.png)
+![Figure 29: Individual sensor testing – breadboard setup with Wi-Fi module](../images/template_pics/29.png)
 
 **Note: Individual Sensor Testing**
 
@@ -364,7 +364,7 @@ The GitHub documentation includes the required setup, wiring details, testing pr
 
 ## Step 4: Design the Enclosure in Fusion 360
 
-![Figure 30: Enclosure parts designed in Fusion 360](images/template_pics/30.png)
+![Figure 30: Enclosure parts designed in Fusion 360](../images/template_pics/5.png)
 
 Once the individual sensor testing was completed and the components were working reliably, I moved on to the hardware design phase. At this point, I had only about two weeks remaining, so completing both the PCB design and the 3D-printed enclosure within the available time was a significant challenge, especially since I did not have much experience with either PCB design or CAD-based mechanical design.
 
@@ -372,21 +372,21 @@ Because of this limited timeline, I made a deliberate decision to use a zero-PCB
 
 The CAD design itself required several iterations. Inventory management systems are generally deployed at a much larger scale in industrial environments, so I wanted the prototype to demonstrate the same underlying concept while keeping the physical implementation small enough for a practical demonstration.
 
-![Figure 31: CAD design iterations in Fusion 360](images/template_pics/31.png)
+![Figure 31: CAD design iterations in Fusion 360](../images/template_pics/31.png)
 
-![Figure 32: Hand-annotated enclosure layout and CAD model](images/template_pics/32.png)
+![Figure 32: Hand-annotated enclosure layout and CAD model](../images/template_pics/32.png)
 
 In a typical production environment, every component would move through a defined production or conveyor line, with the inventory management system positioned along this flow. Based on this concept, I decided to place my system at the entry and exit points of the production line, so that every item would pass through the system for detection and inventory tracking, similar in concept to how passengers pass through a scanner at a metro station.
 
-![Figure 33: CAD model with component placement – front and section views](images/template_pics/33.png)
+![Figure 33: CAD model with component placement – front and section views](../images/template_pics/33.png)
 
 For the prototype, I scaled this concept down to a single compact system with a storage bin that fits within the enclosure. This allowed me to demonstrate the core inventory management workflow on a smaller scale while retaining the basic concept of how the system could be expanded for a larger industrial setup.
 
-![Figure 34: 3D-printed enclosure – front, back and inner views](images/template_pics/34.png)
+![Figure 34: 3D-printed enclosure – front, back and inner views](../images/template_pics/34.png)
 
 For the CAD design, I searched the GrabCAD library for 3D models of each individual sensor and component used in the system. I then imported the relevant models and integrated them into my overall enclosure design. After positioning and aligning each component based on the actual hardware dimensions and mounting requirements, I assembled and refined the complete CAD model to create the final prototype design.
 
-![Figure 35: 3D-printed enclosure parts](images/template_pics/35.png)
+![Figure 35: 3D-printed enclosure parts](../images/template_pics/35.png)
 
 ### Enclosure Features
 
@@ -402,7 +402,7 @@ The enclosure is made up of multiple parts:
 
 **3D-Printed Construction** – The enclosure was fabricated using 3D printing based on the custom CAD design, allowing the dimensions and component cutouts to be tailored to the actual hardware.
 
-![Figure 36: Assembled 3D-printed enclosure – front, back and side views](images/template_pics/36.png)
+![Figure 36: Assembled 3D-printed enclosure – front, back and side views](../images/template_pics/36.png)
 
 ## Step 5: Hardware Assembly
 
@@ -410,7 +410,7 @@ After finalizing the CAD design, I sent the design files to a nearby 3D printing
 
 The next step was to carefully solder the required components and establish reliable electrical connections. The components that needed to be soldered included the RYG LED, piezo buzzer, HX711 module with the load cell, and other required sensor and communication connections. The soldering had to be done carefully, particularly because the available space inside the enclosure was limited and the components had to be positioned without interfering with one another.
 
-![Figure 37: Handwritten pin connection notes](images/template_pics/37.png)
+![Figure 37: Handwritten pin connection notes](../images/template_pics/37.png)
 
 **Pin Connections:**
 
@@ -495,15 +495,15 @@ The next step was to carefully solder the required components and establish reli
 
 **Schematics:**
 
-![Figure 38: PRISM circuit schematic](images/template_pics/38.png)
+![Figure 38: PRISM circuit schematic](../images/template_pics/38.png)
 
 **Soldering Preparation**
 
 Before starting the assembly, I prepared a clean and static-free workspace. The soldering iron was heated to approximately 350 °C for leaded solder or 370–380 °C for lead-free solder. Tweezers and flux were kept ready to handle the smaller pins and make the soldering process more precise.
 
-![Figure 39: Soldering the components](images/template_pics/39.png)
+![Figure 39: Soldering the components](../images/template_pics/39.png)
 
-![Figure 40: Soldering wire connections](images/template_pics/40.png)
+![Figure 40: Soldering wire connections](../images/template_pics/40.png)
 
 **Continuity Testing**
 
@@ -511,69 +511,69 @@ After soldering each module, I performed a continuity test using a multimeter in
 
 Performing the continuity test after each component helped identify wiring or soldering problems early, before proceeding with the complete system integration.
 
-![Figure 41: Load cell and HX711 wired inside the sensor base](images/template_pics/41.png)
+![Figure 41: Load cell and HX711 wired inside the sensor base](../images/template_pics/41.png)
 
-![Figure 42: Sensor base with HX711 module and load cell](images/template_pics/42.png)
+![Figure 42: Sensor base with HX711 module and load cell](../images/template_pics/42.png)
 
-![Figure 43: Fixing components in the sensor base using a glue gun](images/template_pics/43.png)
+![Figure 43: Fixing components in the sensor base using a glue gun](../images/template_pics/43.png)
 
 ## Step 6: Build Process
 
 The build process came together over an intense 2 days of designing, 3D printing, soldering, testing, and troubleshooting. I started by fabricating the custom enclosure and then gradually integrated the sensor modules, communication hardware, indicators, buzzer, and weight-sensing components into the case.
 
-![Figure 44: Front panel with OLED display mounted](images/template_pics/44.png)
+![Figure 44: Front panel with OLED display mounted](../images/template_pics/44.png)
 
-![Figure 45: MAX32630FTHR and PIR sensor mounted on the front panel](images/template_pics/45.png)
+![Figure 45: MAX32630FTHR and PIR sensor mounted on the front panel](../images/template_pics/45.png)
 
-![Figure 46: Sensor base and front panel modules during assembly](images/template_pics/46.png)
+![Figure 46: Sensor base and front panel modules during assembly](../images/template_pics/46.png)
 
-![Figure 47: Workbench during build – Zero PCB wiring and pin notes](images/template_pics/47.png)
+![Figure 47: Workbench during build – Zero PCB wiring and pin notes](../images/template_pics/47.png)
 
 ![Figure 48: Enclosure frame with wiring in progress](images/template_pics/48.png)
 
 A Zero PCB was used to organize and simplify the wiring between the modules. It provided a convenient way to distribute GND and VCC connections and make the required signal connections between the different components, helping keep the wiring compact and organized inside the enclosure.
 
-![Figure 49: Enclosure with side panel open during wiring](images/template_pics/49.png)
+![Figure 49: Enclosure with side panel open during wiring](../images/template_pics/49.png)
 
 It wasn't a perfectly linear process. There were several rounds of testing, adjustments, wiring changes, and mechanical fixes to make everything fit and work together properly. Getting the load cell and HX711 working reliably, positioning the ultrasonic sensor and camera correctly, and fitting all the modules inside the 3D-printed enclosure required a lot of patience and trial and error.
 
-![Figure 50: Enclosure side view with modules and wiring](images/template_pics/50.png)
+![Figure 50: Enclosure side view with modules and wiring](../images/template_pics/50.png)
 
 These two days involved a lot of hands-on work and problem-solving. Each issue helped me better understand the practical challenges of combining electronics, sensors, wiring, and a custom 3D-printed enclosure into a single working system.
 
 ![Figure 51: Internal wiring of the enclosure](images/template_pics/51.png)
 
-![Figure 52: Internal wiring – controller and modules](images/template_pics/52.png)
+![Figure 52: Internal wiring – controller and modules](../images/template_pics/52.png)
 
-![Figure 53: Fitting the wiring inside the enclosure](images/template_pics/53.png)
+![Figure 53: Fitting the wiring inside the enclosure](../images/template_pics/53.png)
 
 Each problem along the way helped me understand the system better, from electronics and soldering to mechanical design, sensor integration, and debugging. By the end, the enclosure had evolved from a CAD design into a working physical node with the components properly integrated and ready for the next stage of testing.
 
-![Figure 54: Internal wiring close-up](images/template_pics/54.png)
+![Figure 54: Internal wiring close-up](../images/template_pics/54.png)
 
-![Figure 55: Front panel wiring from the inside](images/template_pics/55.png)
+![Figure 55: Front panel wiring from the inside](../images/template_pics/55.png)
 
 ## Step 7: Final Assembly
 
-![Figure 56: Final assembled PRISM node – front view](images/template_pics/56.png)
+![Figure 56: Final assembled PRISM node – front view](../images/template_pics/56.png)
 
 After integrating all the sensors, modules, wiring, and supporting electronics, the complete system was assembled inside the custom 3D-printed enclosure. The final assembly provided a compact and organized integration of the sensing and control components, with all major connections securely routed and the individual modules positioned according to the enclosure design. The completed unit represents the final physical implementation of the node, ready for testing and deployment.
 
-![Figure 57: Final assembly – side view with USB connection](images/template_pics/57.png)
+![Figure 57: Final assembly – side view with USB connection](../images/template_pics/57.png)
 
-![Figure 58: Final assembly – front view with storage bin](images/template_pics/58.png)
+![Figure 58: Final assembly – front view with storage bin](../images/template_pics/58.png)
 
-![Figure 59: Final assembly – angled view](images/template_pics/59.png)
+![Figure 59: Final assembly – angled view](../images/template_pics/59.png)
 
 ## Step 8: Hardware Testing and Troubleshooting
 
-![Figure 60: PRISM node connected to laptop for hardware testing](images/template_pics/60.png)
+![Figure 60: PRISM node connected to laptop for hardware testing](../images/template_pics/60.png)
 
 With the complete hardware assembly finished and only four days remaining before the final submission, the next priority was to verify that every sensor and module was functioning correctly. Since I had already prepared individual test setups for each sensor, the testing process was much easier and more systematic.
 
 During the initial testing, I discovered that the display and RYG LED were not working at all. After checking the components, the issue was traced back to wiring problems rather than faulty hardware. I had to rewire both modules and test the connections again. This troubleshooting and rewiring process took nearly four hours, but eventually both the display and RYG LED were working perfectly.
 
-![Figure 61: Hardware testing with serial output on laptop](images/template_pics/61.png)
+![Figure 61: Hardware testing with serial output on laptop](../images/template_pics/61.png)
 
 After resolving these issues, I went through each sensor and module individually once again to verify their operation. This final round of individual testing gave me confidence that the components were functioning correctly before moving forward with the complete integrated system.
 
