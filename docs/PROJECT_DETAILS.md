@@ -581,13 +581,13 @@ After resolving these issues, I went through each sensor and module individually
 
 After completing the individual testing of each sensor, the next major step was to combine the separate sensor programs into a single working demonstration. This was more involved than simply merging the code, because each sensor had its own initialization, reading method, timing requirements, and output logic. I had to make sure that adding one sensor did not interfere with the operation of the others.
 
-![Figure 62: OLED showing live LED count with green stock indicator](images/template_pics/62.png)
+![Figure 62: OLED showing live LED count with green stock indicator](../images/template_pics/62.png)
 
 For the initial demonstration, I decided to use the RYG LEDs as the primary inventory item, since they were available in sufficient quantity for repeated testing. I then built the inventory monitoring logic around the actual measurements obtained from the hardware.
 
 The first step was integrating and calibrating the load cell with the HX711. I measured the weight of an empty tray, which was approximately 55 g, and then measured an individual RYG LED, which was approximately 3.55 g. The tray weight therefore had to be separated from the actual inventory weight before calculating the quantity.
 
-![Figure 63: Code – HX711 load cell calibration and startup](images/template_pics/63.png)
+![Figure 63: Code – HX711 load cell calibration and startup](../images/template_pics/63.png)
 
 The approximate number of LEDs can be calculated using:
 
@@ -601,15 +601,15 @@ Estimated LED count = 177.75 / 3.55 ≈ 50 LEDs
 
 This provided a practical way to estimate the remaining inventory from the load-cell measurement rather than manually counting every LED.
 
-![Figure 64: Code – main loop with piece count calculation](images/template_pics/64.png)
+![Figure 64: Code – main loop with piece count calculation](../images/template_pics/64.png)
 
 I then introduced the inventory thresholds into the system. For the demonstration, the full inventory was considered to be 13 LEDs. When the estimated count falls below 50% of the initial inventory, the RYG indication is used to alert the worker that the stock level is decreasing. This makes the worker the first point of awareness, allowing the shortage to be identified and reported before the situation becomes critical.
 
-![Figure 65: Code – RYG LED update based on percentage remaining](images/template_pics/65.png)
+![Figure 65: Code – RYG LED update based on percentage remaining](../images/template_pics/65.png)
 
 When the estimated inventory falls below 20%, the system enters a more critical state. A red LED indication is activated along with a 10-second buzzer. The buzzer is specifically intended to make the severity of the situation more noticeable, so that the worker can immediately recognize that the remaining inventory requires urgent attention and notify the store manager.
 
-![Figure 66: Code – buzzer start, stop and update logic](images/template_pics/66.png)
+![Figure 66: Code – buzzer start, stop and update logic](../images/template_pics/66.png)
 
 **Challenges During Sensor Integration**
 
@@ -619,17 +619,17 @@ For example, the weight sensor cannot simply be treated as an instantaneous read
 
 I therefore added the IR sensor as a second source of information. When a worker removes an LED or another component, the IR sensor can detect the removal while the load cell checks whether the overall weight has also decreased. Using these two observations together provides an additional verification mechanism instead of relying entirely on a single sensor.
 
-![Figure 67: Code – IR-based pick estimator](images/template_pics/67.png)
+![Figure 67: Code – IR-based pick estimator](../images/template_pics/67.png)
 
 I also integrated the ultrasonic sensor to provide another measurement of the inventory level. The sensor measures the distance between itself and the objects inside the bin. When more objects are present, the surface of the inventory is closer to the sensor, resulting in a smaller measured distance. As the inventory decreases, the distance increases. This gives another physical measurement that can be compared with the weight-based estimation.
 
-![Figure 68: Code – ultrasonic distance measurement](images/template_pics/68.png)
+![Figure 68: Code – ultrasonic distance measurement](/images/template_pics/68.png) 
 
 Bringing these sensors together required repeated testing because the readings do not behave identically. Weight measurements can fluctuate, IR detection represents an event, and ultrasonic sensing provides a distance value that changes continuously. The challenge was therefore not only to make each sensor work, but to make their outputs contribute meaningfully to the same inventory-monitoring logic.
 
 These combined sensor tests formed the offline implementation and demonstration setup for the project. The objective at this stage was to validate the complete sensing concept using measurable inventory changes before moving toward the final integrated implementation.
 
-![Figure 69: Offline demo – green, yellow and red stock indications](images/template_pics/69.png)
+![Figure 69: Offline demo – green, yellow and red stock indications](../images/template_pics/69.png)
 
 ## Step 10: IoT Integration and Firebase Data Flow
 
@@ -639,7 +639,7 @@ The overall data flow was structured as:
 
 **Sensors → Main Controller → Wi-Fi Module → Internet → Firebase → Dashboard / Prediction**
 
-![Figure 70: Code – reading sensor data from the load cell](images/template_pics/70.png)
+![Figure 70: Code – reading sensor data from the load cell](../images/template_pics/70.png)
 
 The main controller first collects the readings from the different sensors. These include the estimated inventory count, load-cell weight, IR detection status, ultrasonic distance, and inventory-level indication. The controller processes these raw sensor readings locally and generates the values required by the inventory-monitoring logic.
 
@@ -649,19 +649,19 @@ The main controller first collects the readings from the different sensors. Thes
 
 To transfer this information to the cloud, I integrated a Wi-Fi module with the controller. The first stage was establishing communication between the controller and the Wi-Fi module. The Wi-Fi module was configured with the required network credentials and used to establish an internet connection.
 
-![Figure 72: Serial Monitor – Wi-Fi gateway connected and sending data to Firebase (HTTP 200)](images/template_pics/72.png)
+![Figure 72: Serial Monitor – Wi-Fi gateway connected and sending data to Firebase (HTTP 200)](../images/template_pics/72.png)
 
 Once the connection was available, the controller could send the processed sensor values through the Wi-Fi interface. I had to ensure that the communication between the controller and Wi-Fi module was working correctly before attempting to send data to Firebase. This involved checking the transmitted values and making sure that the sensor readings being generated locally were reaching the communication layer correctly.
 
-![Figure 73: Serial Monitor – load cell and distance data being transmitted](images/template_pics/73.png)
+![Figure 73: Serial Monitor – load cell and distance data being transmitted](../images/template_pics/73.png)
 
 After establishing the Wi-Fi connection, I configured the system to transmit the inventory-related data to Firebase. Instead of treating each sensor independently, the relevant readings were sent as part of the inventory data generated by the node.
 
-![Figure 74: Firebase Realtime Database – connection status and bins](images/template_pics/74.png)
+![Figure 74: Firebase Realtime Database – connection status and bins](../images/template_pics/74.png)
 
 ### Firebase Data Flow
 
-![Figure 75: Firebase Realtime Database – BIN-RYG-08 data](images/template_pics/75.png)
+![Figure 75: Firebase Realtime Database – BIN-RYG-08 data](../images/template_pics/75.png)
 
 The data flow begins when a sensor produces a physical measurement. For example, the load cell measures the weight of the contents, which is processed to estimate the number of LEDs remaining. Similarly, the IR sensor provides object-removal information, while the ultrasonic sensor provides the distance to the inventory.
 
@@ -671,55 +671,55 @@ This creates a continuous path from the physical inventory to the cloud:
 
 **Physical Inventory → Sensor Measurements → Local Processing → Wi-Fi Transmission → Firebase Storage**
 
-![Figure 76: Firebase data and Serial Monitor side by side](images/template_pics/76.png)
+![Figure 76: Firebase data and Serial Monitor side by side](../images/template_pics/76.png)
 
 With the data now available in Firebase, the same dataset can be used for the next stages of the project. The immediate goal is to use it for remote inventory visualization, allowing the current inventory status and sensor readings to be displayed without directly accessing the hardware. The accumulated historical data can then provide the input required for inventory trend analysis and prediction.
 
 This IoT integration therefore forms the bridge between the physical sensing system and the software side of the project, allowing the measurements collected by the node to become remotely accessible data rather than remaining only on the device.
 
-![Figure 77: Firebase – model prediction and history data](images/template_pics/77.png)
+![Figure 77: Firebase – model prediction and history data](../images/template_pics/77.png)
 
 ## Step 11: GUI and Inventory Management Dashboard
 
 After completing the hardware and IoT integration, the next stage was to develop the GUI for inventory monitoring and management. Since the system is intended for factory production environments and store or stock managers, I chose a dashboard layout inspired by the type of Power BI-style interfaces commonly used for industrial and business data monitoring. The focus was to make the important inventory information visible without requiring the manager to go through individual sensor readings.
 
-![Figure 78: Dashboard – Inventory Overview](images/template_pics/78.png)
+![Figure 78: Dashboard – Inventory Overview](../images/template_pics/78.png)
 
-![Figure 79: Dashboard – product search and bins](images/template_pics/79.png)
+![Figure 79: Dashboard – product search and bins](../images/template_pics/79.png)
 
 The main dashboard begins with an inventory overview, providing a quick summary of the current stock situation. Below this, individual components are displayed along with their estimated remaining inventory and the number of days before they are expected to go out of stock. Charts are also provided for individual components so that managers can understand inventory levels and changes more easily through visual trends rather than relying only on numerical values.
 
-![Figure 80: Dashboard – shipments & invoices, supplier & courier scorecard](images/template_pics/80.png)
+![Figure 80: Dashboard – shipments & invoices, supplier & courier scorecard](../images/template_pics/80.png)
 
 The dashboard also includes category-based searching and filtering, allowing managers to select a particular product category and view the corresponding inventory information. The system can also display the contents of individual storage bins, including the estimated quantity of components currently present in each bin.
 
-![Figure 81: Dashboard – category-based product search](images/template_pics/81.png)
+![Figure 81: Dashboard – category-based product search](../images/template_pics/81.png)
 
 Another part of the interface focuses on inventory trends. Graphs are used to show how stock levels and consumption rates change over time, making it easier to identify increasing or decreasing inventory trends. Historical inventory information, including previous-year data, is also included to provide a basis for comparing current stock behaviour with past records.
 
-![Figure 82: Dashboard – stock forecast chart for RYG LED Sensor bin](images/template_pics/82.png)
+![Figure 82: Dashboard – stock forecast chart for RYG LED Sensor bin](../images/template_pics/82.png)
 
 Since the system may be used for extended periods, I also added a night mode to make the dashboard more comfortable to use in low-light environments.
 
-![Figure 83: Dashboard – night mode](images/template_pics/83.png)
+![Figure 83: Dashboard – night mode](../images/template_pics/83.png)
 
 At the current prototype stage, the RYG LED inventory is the primary real-time dataset connected to the dashboard. Its quantity and inventory status are updated using the data received from the physical sensing system. The other components and interface elements are being used to demonstrate how the system can be extended as more real-time inventory data becomes available.
 
-![Figure 84: Dashboard – live RYG LED bin card with forecast](images/template_pics/84.png)
+![Figure 84: Dashboard – live RYG LED bin card with forecast](../images/template_pics/84.png)
 
-![Figure 85: Dashboard – priority watchlist showing RYG LED bin](images/template_pics/85.png)
+![Figure 85: Dashboard – priority watchlist showing RYG LED bin](../images/template_pics/85.png)
 
 ### Invoice PDF Tracking
 
-![Figure 86: Invoice PDF tracking – uploading an invoice PDF](images/template_pics/86.png)
+![Figure 86: Invoice PDF tracking – uploading an invoice PDF](../images/template_pics/86.png)
 
 ![Figure 87: Invoice PDF tracking – confirming shipment details](images/template_pics/87.png)
 
 I also added a separate invoice PDF tracking feature to make inventory updates easier to manage from existing company records. The idea is to allow relevant invoice documents to be associated with inventory transactions rather than requiring the store manager to manually search through separate records.
 
-![Figure 88: Invoice PDF tracking – shipment added with tracking link](images/template_pics/88.png)
+![Figure 88: Invoice PDF tracking – shipment added with tracking link](../images/template_pics/88.png)
 
-![Figure 89: Courier tracking details for the shipment](images/template_pics/89.png)
+![Figure 89: Courier tracking details for the shipment](../images/template_pics/89.png)
 
 By tracking invoice information alongside inventory data, the manager can refer back to the corresponding purchase or stock information when required. This provides an additional connection between the physical inventory, the digital inventory records, and the documentation associated with stock movement.
 
@@ -731,21 +731,21 @@ Github Documentations: [https://github.com/mydhily-mr/aiot-inventory-predictor/t
 
 The prediction system is also connected to an email alert mechanism. When the predicted or monitored inventory reaches a low-stock condition, the system can generate an email notification so that the responsible person can take action before the component is completely depleted.
 
-![Figure 90: Email alert – low-stock prediction and reorder notification](images/template_pics/90.png)
+![Figure 90: Email alert – low-stock prediction and reorder notification](../images/template_pics/90.png)
 
 At this stage, both the GUI and the AI prediction model are hosted locally, since the current implementation is a prototype. The local setup allows me to test the complete workflow, from sensor data collection and Firebase transmission to dashboard visualization, prediction, and alert generation, before moving toward a fully deployed production system.
 
-![Figure 91: Terminal – local server and prediction model running](images/template_pics/91.png)
+![Figure 91: Terminal – local server and prediction model running](../images/template_pics/91.png)
 
 ## Step 12: Final Outputs and Demonstration Results
 
-![Figure 92: Final PRISM prototype with laptop](images/template_pics/92.png)
+![Figure 92: Final PRISM prototype with laptop](../images/template_pics/92.png)
 
 The final outcome of the project is a working AIoT-based inventory monitoring prototype that connects the physical inventory sensing system with cloud data storage, a management dashboard, and an inventory prediction module.
 
 The completed hardware node integrates the load cell and HX711, IR sensor, ultrasonic sensor, RYG indicators, display, buzzer, Wi-Fi module, and supporting electronics within the custom 3D-printed enclosure. The individual sensors were tested separately before being integrated, and the final assembly was then tested as a complete system.
 
-![Figure 93: Final demonstration – PRISM node with RYG LEDs](images/template_pics/93.png)
+![Figure 93: Final demonstration – PRISM node with RYG LEDs](../images/template_pics/93.png)
 
 During the final demonstration, the RYG LEDs were used as the primary inventory item. The load cell was calibrated using an empty tray weight of approximately 55 g, while the measured weight of a single RYG LED was approximately 3.55 g. These measurements were used to estimate the number of LEDs remaining based on changes in the total measured weight.
 
@@ -759,11 +759,11 @@ During the final demonstration, the RYG LEDs were used as the primary inventory 
 
 The inventory logic was demonstrated using two stock-level thresholds. When the estimated inventory falls below 50%, the system provides an RYG indication to notify the worker that the stock level is decreasing. When the inventory falls below 20%, the system activates the red indicator and a 10-second buzzer alert, representing a more critical shortage that requires the worker to notify the store manager.
 
-![Figure 95: Final demonstration – worker picking components from the bin](images/template_pics/95.png)
+![Figure 95: Final demonstration – worker picking components from the bin](../images/template_pics/95.png)
 
 The IR sensor and ultrasonic sensor were also incorporated into the demonstration as additional inventory measurements. The IR sensor provides an indication when a component is removed, while the ultrasonic sensor measures the distance to the inventory inside the bin. These readings provide additional information that can be compared with the weight-based inventory calculation.
 
-![Figure 96: Final PRISM node – different views](images/template_pics/96.png)
+![Figure 96: Final PRISM node – different views](../images/template_pics/10.png)
 
 ### IoT and Dashboard Results
 
@@ -773,7 +773,7 @@ The dashboard then uses the available data to present the inventory information 
 
 At the current prototype stage, the RYG LED inventory is the primary real-time dataset displayed in the dashboard. Changes made to the physical inventory are reflected in the corresponding inventory data, demonstrating the connection between the hardware sensing layer and the software interface.
 
-![Figure 97: Dashboard alongside the Firebase Realtime Database](images/template_pics/97.png)
+![Figure 97: Dashboard alongside the Firebase Realtime Database](../images/template_pics/97.png)
 
 ### Prediction and Alert Results
 
