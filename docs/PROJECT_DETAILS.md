@@ -23,9 +23,9 @@
 | Video displaying working of Project | **Done** |
 | BONUS/OPTIONAL: Video explaining working of the project | **Done** |
 
-# Title: PRISM — Predictive Replenishment & Inventory Stock Monitoring
+# PRISM — Predictive Replenishment & Inventory Stock Monitoring
 
-**Tag line:** **PRISM predicts what you're about to run out of, before you run out.**
+**PRISM predicts what you're about to run out of, before you run out.**
 
 ## Cover Image:
 
@@ -278,7 +278,7 @@ If something went wrong, a FAIL.TXT file will appear on the drive explaining why
 
 Even though I flashed the board using Windows 11 PC, later I switched to Ubuntu 20.04 LTS, because driver support was limited in Windows.
 
-![Figure 14: MAX32630FTHR board connected to the MAX32625PICO debug adapter with ribbon cable](images/14.png)
+![Figure 14: MAX32630FTHR board connected to the MAX32625PICO debug adapter with ribbon cable](../images/template_pics/14.png)
 
 ## Step 2: MAX32630 FTHR Board Installation in Arduino IDE
 
@@ -324,7 +324,7 @@ If the steps till above work, Congarts!!!! Now you can start using the MAX32630 
 
 After installing the MAX32630 and successfully running the Hello World example, I moved on to testing each sensor individually before starting the complete system integration. The detailed testing procedures, schematics, and pin connections for each sensor are documented on my GitHub page and can be referred to for reproducing the setup.
 
-**Github repo:** **[https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs](https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs)**
+**Github repo:** **[Documentation](https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs)**
 
 Individual sensor testing became the single most time-consuming phase of the project and had a major impact on the overall project timeline. Nearly half of my total project time was consumed by getting the individual sensors to work reliably. What I initially expected to be a relatively short validation stage turned into an extended debugging process, with different hardware and software issues appearing with different peripherals.
 
@@ -336,7 +336,10 @@ Although I am not completely certain that my modification is the correct or fina
 
 ![Figure 22: OLED display test showing "Hello World"](../images/template_pics/22.jpeg)
 
-![Figure 23: RYG LED test setup on breadboard](../images/template_pics/23.jpeg)
+<!-- ![Figure 23: RYG LED test setup on breadboard](../images/template_pics/23.jpeg) -->
+
+![RYG LED Demonstration](../images/template_pics/23a.gif)
+
 
 This debugging phase significantly reduced the time available for the remaining stages of the project. Tasks that were originally planned for system integration and higher-level functionality had to be pushed later because the individual components first had to be made stable. In practical terms, almost half of the project schedule was spent not on building the final system, but on making the individual sensors and their supporting libraries work correctly with the MAX32630.
 
@@ -360,7 +363,7 @@ The detailed procedures and results for individual sensor testing are documented
 
 The GitHub documentation includes the required setup, wiring details, testing procedure, and verification steps for each sensor. Anyone who wants to reproduce or verify the individual sensor tests can refer to the documentation and follow the steps provided there.
 
-**GitHub Documentation**: [https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs](https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs)
+**GitHub Documentation**: [Documentation](https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs)
 
 ## Step 4: Design the Enclosure in Fusion 360
 
@@ -501,13 +504,20 @@ The next step was to carefully solder the required components and establish reli
 
 Before starting the assembly, I prepared a clean and static-free workspace. The soldering iron was heated to approximately 350 °C for leaded solder or 370–380 °C for lead-free solder. Tweezers and flux were kept ready to handle the smaller pins and make the soldering process more precise.
 
-![Figure 39: Soldering the components](../images/template_pics/39.png)
+<!--![Figure 39: Soldering the components](../images/template_pics/39.png) -->
 
-![Figure 40: Soldering wire connections](../images/template_pics/40.png)
+![Soldering the components](../images/template_pics/39a.gif)
+
+![Soldering wire connections](../images/template_pics/40a.gif)
+
+
+<!-- ![Figure 40: Soldering wire connections](../images/template_pics/40.png) -->
 
 **Continuity Testing**
 
 After soldering each module, I performed a continuity test using a multimeter in continuity mode. I checked the connection between each module pin and its corresponding PCB pad or trace. A beep or near-zero resistance indicated that the connection was electrically continuous and properly soldered.
+
+![Soldering wire connections](../images/template_pics/42a.gif)
 
 Performing the continuity test after each component helped identify wiring or soldering problems early, before proceeding with the complete system integration.
 
@@ -515,7 +525,9 @@ Performing the continuity test after each component helped identify wiring or so
 
 ![Figure 42: Sensor base with HX711 module and load cell](../images/template_pics/42.png)
 
-![Figure 43: Fixing components in the sensor base using a glue gun](../images/template_pics/43.png)
+![Soldering wire connections](../images/template_pics/43a.gif)
+
+<!-- ![Figure 43: Fixing components in the sensor base using a glue gun](../images/template_pics/43.png) -->
 
 ## Step 6: Build Process
 
@@ -529,7 +541,9 @@ The build process came together over an intense 2 days of designing, 3D printing
 
 ![Figure 47: Workbench during build – Zero PCB wiring and pin notes](../images/template_pics/47.png)
 
-![Figure 48: Enclosure frame with wiring in progress](images/template_pics/48.png)
+![Figure 48: Enclosure frame with wiring in progress](../images/template_pics/48.jpeg) 
+
+<!-- ![Enclosure frame with wiring in progress](../images/template_pics/48a.gif) -->
 
 A Zero PCB was used to organize and simplify the wiring between the modules. It provided a convenient way to distribute GND and VCC connections and make the required signal connections between the different components, helping keep the wiring compact and organized inside the enclosure.
 
@@ -541,7 +555,7 @@ It wasn't a perfectly linear process. There were several rounds of testing, adju
 
 These two days involved a lot of hands-on work and problem-solving. Each issue helped me better understand the practical challenges of combining electronics, sensors, wiring, and a custom 3D-printed enclosure into a single working system.
 
-![Figure 51: Internal wiring of the enclosure](images/template_pics/51.png)
+<!-- ![Figure 51: Internal wiring of the enclosure](images/template_pics/51.png) -->
 
 ![Figure 52: Internal wiring – controller and modules](../images/template_pics/52.png)
 
@@ -623,13 +637,13 @@ I therefore added the IR sensor as a second source of information. When a worker
 
 I also integrated the ultrasonic sensor to provide another measurement of the inventory level. The sensor measures the distance between itself and the objects inside the bin. When more objects are present, the surface of the inventory is closer to the sensor, resulting in a smaller measured distance. As the inventory decreases, the distance increases. This gives another physical measurement that can be compared with the weight-based estimation.
 
-![Figure 68: Code – ultrasonic distance measurement](/images/template_pics/68.png) 
+![Figure 68: Code – ultrasonic distance measurement](/images/template_pics/69.png) 
 
 Bringing these sensors together required repeated testing because the readings do not behave identically. Weight measurements can fluctuate, IR detection represents an event, and ultrasonic sensing provides a distance value that changes continuously. The challenge was therefore not only to make each sensor work, but to make their outputs contribute meaningfully to the same inventory-monitoring logic.
 
 These combined sensor tests formed the offline implementation and demonstration setup for the project. The objective at this stage was to validate the complete sensing concept using measurable inventory changes before moving toward the final integrated implementation.
 
-![Figure 69: Offline demo – green, yellow and red stock indications](../images/template_pics/69.png)
+![Figure 69: Offline demo – green, yellow and red stock indications](../images/template_pics/68.png)
 
 ## Step 10: IoT Integration and Firebase Data Flow
 
@@ -643,7 +657,7 @@ The overall data flow was structured as:
 
 The main controller first collects the readings from the different sensors. These include the estimated inventory count, load-cell weight, IR detection status, ultrasonic distance, and inventory-level indication. The controller processes these raw sensor readings locally and generates the values required by the inventory-monitoring logic.
 
-![Figure 71: Serial Monitor – calibration, load cell, distance and data sent](images/template_pics/71.png)
+![Figure 71: Serial Monitor – calibration, load cell, distance and data sent](../images/template_pics/68.png)
 
 ### Wi-Fi Integration
 
@@ -677,13 +691,14 @@ With the data now available in Firebase, the same dataset can be used for the ne
 
 This IoT integration therefore forms the bridge between the physical sensing system and the software side of the project, allowing the measurements collected by the node to become remotely accessible data rather than remaining only on the device.
 
-![Figure 77: Firebase – model prediction and history data](../images/template_pics/77.png)
+![Figure 77: Firebase – model prediction and history data](../images/template_pics/78.png)
 
 ## Step 11: GUI and Inventory Management Dashboard
 
 After completing the hardware and IoT integration, the next stage was to develop the GUI for inventory monitoring and management. Since the system is intended for factory production environments and store or stock managers, I chose a dashboard layout inspired by the type of Power BI-style interfaces commonly used for industrial and business data monitoring. The focus was to make the important inventory information visible without requiring the manager to go through individual sensor readings.
 
-![Figure 78: Dashboard – Inventory Overview](../images/template_pics/78.png)
+ ![Figure 78: Dashboard – Inventory Overview](../images/template_pics/78.png) 
+
 
 ![Figure 79: Dashboard – product search and bins](../images/template_pics/79.png)
 
@@ -709,19 +724,24 @@ At the current prototype stage, the RYG LED inventory is the primary real-time d
 
 ![Figure 85: Dashboard – priority watchlist showing RYG LED bin](../images/template_pics/85.png)
 
-### Invoice PDF Tracking
-
 ![Figure 86: Invoice PDF tracking – uploading an invoice PDF](../images/template_pics/86.png)
 
-![Figure 87: Invoice PDF tracking – confirming shipment details](images/template_pics/87.png)
+### Invoice PDF Tracking
 
-I also added a separate invoice PDF tracking feature to make inventory updates easier to manage from existing company records. The idea is to allow relevant invoice documents to be associated with inventory transactions rather than requiring the store manager to manually search through separate records.
+<!-- ![Figure 87: Invoice PDF tracking – confirming shipment details](images/template_pics/87.png) -->
 
 ![Figure 88: Invoice PDF tracking – shipment added with tracking link](../images/template_pics/88.png)
 
+I also added a separate invoice PDF tracking feature to make inventory updates easier to manage from existing company records. The idea is to allow relevant invoice documents to be associated with inventory transactions rather than requiring the store manager to manually search through separate records.
+
 ![Figure 89: Courier tracking details for the shipment](../images/template_pics/89.png)
 
+![Figure 90: Email alert – low-stock prediction and reorder notification](../images/template_pics/90.png)
+
+
 By tracking invoice information alongside inventory data, the manager can refer back to the corresponding purchase or stock information when required. This provides an additional connection between the physical inventory, the digital inventory records, and the documentation associated with stock movement.
+
+![Figure 91: Terminal – local server and prediction model running](../images/template_pics/91.png)
 
 ### Inventory Prediction and Alerts
 
@@ -731,21 +751,23 @@ Github Documentations: [https://github.com/mydhily-mr/aiot-inventory-predictor/t
 
 The prediction system is also connected to an email alert mechanism. When the predicted or monitored inventory reaches a low-stock condition, the system can generate an email notification so that the responsible person can take action before the component is completely depleted.
 
-![Figure 90: Email alert – low-stock prediction and reorder notification](../images/template_pics/90.png)
+![Figure 92: Final PRISM prototype with laptop](../images/template_pics/92.png)
 
 At this stage, both the GUI and the AI prediction model are hosted locally, since the current implementation is a prototype. The local setup allows me to test the complete workflow, from sensor data collection and Firebase transmission to dashboard visualization, prediction, and alert generation, before moving toward a fully deployed production system.
 
-![Figure 91: Terminal – local server and prediction model running](../images/template_pics/91.png)
+![Figure 92: Final PRISM prototype with laptop](../images/template_pics/94.png)
+
+
 
 ## Step 12: Final Outputs and Demonstration Results
 
-![Figure 92: Final PRISM prototype with laptop](../images/template_pics/92.png)
+![Figure 92: Final PRISM prototype with laptop](../images/template_pics/60.png)
 
 The final outcome of the project is a working AIoT-based inventory monitoring prototype that connects the physical inventory sensing system with cloud data storage, a management dashboard, and an inventory prediction module.
 
 The completed hardware node integrates the load cell and HX711, IR sensor, ultrasonic sensor, RYG indicators, display, buzzer, Wi-Fi module, and supporting electronics within the custom 3D-printed enclosure. The individual sensors were tested separately before being integrated, and the final assembly was then tested as a complete system.
 
-![Figure 93: Final demonstration – PRISM node with RYG LEDs](../images/template_pics/93.png)
+![Figure 93: Final demonstration – PRISM node with RYG LEDs](../images/template_pics/93.png) 
 
 During the final demonstration, the RYG LEDs were used as the primary inventory item. The load cell was calibrated using an empty tray weight of approximately 55 g, while the measured weight of a single RYG LED was approximately 3.55 g. These measurements were used to estimate the number of LEDs remaining based on changes in the total measured weight.
 
@@ -755,15 +777,15 @@ During the final demonstration, the RYG LEDs were used as the primary inventory 
 | Yellow | 21% to 50% | 3 to 6 pieces |
 | Red | 20% or less | 0 to 2 pieces |
 
-![Figure 94: Final demonstration – dashboard, Firebase data and email alert](images/template_pics/94.png)
+![Figure 94: Final demonstration – dashboard, Firebase data and email alert](../images/template_pics/96.png)
 
 The inventory logic was demonstrated using two stock-level thresholds. When the estimated inventory falls below 50%, the system provides an RYG indication to notify the worker that the stock level is decreasing. When the inventory falls below 20%, the system activates the red indicator and a 10-second buzzer alert, representing a more critical shortage that requires the worker to notify the store manager.
 
-![Figure 95: Final demonstration – worker picking components from the bin](../images/template_pics/95.png)
+![Figure 95: Final demonstration – worker picking components from the bin](../images/template_pics/97.png)
 
 The IR sensor and ultrasonic sensor were also incorporated into the demonstration as additional inventory measurements. The IR sensor provides an indication when a component is removed, while the ultrasonic sensor measures the distance to the inventory inside the bin. These readings provide additional information that can be compared with the weight-based inventory calculation.
 
-![Figure 96: Final PRISM node – different views](../images/template_pics/10.png)
+![Figure 96: Final PRISM node – different views](../images/template_pics/98.png)
 
 ### IoT and Dashboard Results
 
@@ -773,7 +795,7 @@ The dashboard then uses the available data to present the inventory information 
 
 At the current prototype stage, the RYG LED inventory is the primary real-time dataset displayed in the dashboard. Changes made to the physical inventory are reflected in the corresponding inventory data, demonstrating the connection between the hardware sensing layer and the software interface.
 
-![Figure 97: Dashboard alongside the Firebase Realtime Database](../images/template_pics/97.png)
+![Figure 97: Dashboard alongside the Firebase Realtime Database](../images/template_pics/99.png)
 
 ### Prediction and Alert Results
 
@@ -781,7 +803,7 @@ The prediction module was implemented using Linear Regression to analyse the ava
 
 An email notification mechanism was also implemented as part of the prototype. When the inventory reaches the defined low-stock condition, the system can generate an alert for the responsible personnel. This extends the system beyond passive monitoring by providing a mechanism for notifying the user when attention is required.
 
-![Figure 98: Email alert received for low stock](images/template_pics/98.png)
+![Figure 98: Email alert received for low stock](../images/template_pics/92.png)
 
 ### Overall Demonstration
 
@@ -789,7 +811,7 @@ The final prototype demonstrates the complete workflow:
 
 **Inventory → Sensors → Controller → Wi-Fi → Firebase → Dashboard → Prediction → Email Alert**
 
-![Figure 99: Complete workflow – dashboard, Firebase, PRISM node and email alert](images/template_pics/99.png)
+![Figure 99: Complete workflow – dashboard, Firebase, PRISM node and email alert](../images/template_pics/96.png)
 
 The final output is therefore not limited to a physical sensing node. It demonstrates an integrated workflow in which inventory changes are detected at the hardware level, processed locally, transmitted to the cloud, visualized through a management dashboard, analysed for future stock behaviour, and used to generate alerts.
 
@@ -799,7 +821,7 @@ The current implementation is intentionally maintained as a local prototype for 
 
 ## Schematics
 
-![Figure 100: PRISM complete circuit schematic](images/template_pics/100.png)
+![Figure 100: PRISM complete circuit schematic](../images/template_pics/38.png)
 
 ## Project Video:
 

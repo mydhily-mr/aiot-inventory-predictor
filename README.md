@@ -5,7 +5,7 @@
 ![PRISM – three units showing green, yellow and red stock levels](images/template_pics/1.png)
 
 📺 **Demo video:** [youtu.be/odlPvgT5Zeg](https://youtu.be/odlPvgT5Zeg?si=Ek_2I9EwPxp-R_3K)  
-📖 **Full build write-up:** [PROJECT_DETAILS.md](PROJECT_DETAILS.md)  
+📖 **Full build write-up:** [PROJECT_DETAILS.md](https://github.com/mydhily-mr/aiot-inventory-predictor/blob/main/docs/PROJECT_DETAILS.md)  
 🛠️ **Sensor testing docs:** [docs/](https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs)
 
 ---
@@ -48,7 +48,7 @@ The aim is to know how much stock is left, and also when it is going to run out.
 Inventory → Sensors → MAX32630FTHR → NodeMCU Wi-Fi → Firebase → Dashboard → Prediction → Email Alert
 ```
 
-![PRISM system concept](images/template_pics/64.png)
+![PRISM system concept](images/template_pics/96.png)
 
 ### Stock Level Indication
 
@@ -117,13 +117,13 @@ Load cell → HX711: Red → E+, Black → E−, Green → A+, White → A−
 4. **Flash the firmware**, calibrate the load cell (empty tray weight and single-piece weight), and connect the NodeMCU gateway to Firebase.
 5. **Run the dashboard and prediction model** locally.
 
-See [PROJECT_DETAILS.md](PROJECT_DETAILS.md) for the complete step-by-step build.
+See [PROJECT_DETAILS.md](https://github.com/mydhily-mr/aiot-inventory-predictor/blob/main/docs/PROJECT_DETAILS.md) for the complete step-by-step build.
 
 ## Dashboard
 
-![Inventory Overview dashboard](images/template_pics/64.png)
-![Inventory Overview dashboard](images/template_pics/65.png)
-![Inventory Overview dashboard](images/template_pics/66.png)
+![Inventory Overview dashboard](images/template_pics/79.png)
+![Inventory Overview dashboard](images/template_pics/80.png)
+![Inventory Overview dashboard](images/template_pics/81.png)
 
 
 ## Project Status
