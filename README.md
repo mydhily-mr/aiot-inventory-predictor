@@ -6,6 +6,7 @@
 
 📺 **Demo video:** [youtu.be/odlPvgT5Zeg](https://youtu.be/odlPvgT5Zeg?si=Ek_2I9EwPxp-R_3K)  
 📖 **Full build write-up:** [PROJECT_DETAILS.md](https://github.com/mydhily-mr/aiot-inventory-predictor/blob/main/docs/PROJECT_DETAILS.md)  
+📺 **Website:** [Website Link](https://mydhily-mr.github.io/prism/)  
 🛠️ **Sensor testing docs:** [docs/](https://github.com/mydhily-mr/aiot-inventory-predictor/tree/main/docs)
 
 ---
